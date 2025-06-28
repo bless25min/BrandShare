@@ -775,6 +775,24 @@ FOR ALL USING (true) WITH CHECK (true);</pre>
             // 載入資料
             loadListings();
             
+            // 如果有 Supabase，設定即時更新（但先檢查是否支援）
+            if (supabaseClient && supabaseClient.channel) {
+                try {
+                    const channel = supabaseClient
+                        .channel('listings-changes')
+                        .on('postgres_changes', 
+                            { event: '*', schema: 'public', table: 'listings' }, 
+                            function() {
+                                console.log('收到即時更新');
+                                loadListings();
+                            }
+                        )
+                        .subscribe();
+                } catch (err) {
+                    console.log('即時更新功能不可用');
+                }
+            }
+            
             // 設定即時更新
             if (window.supabaseClient) {
                 const channel = window.supabaseClient

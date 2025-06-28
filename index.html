@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AdSpace Connect - 廣告版位媒合平台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1.5rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-outline:hover {
+            background: white;
+            color: #667eea;
+        }
+
+        /* Hero Section */
+        .hero {
+            margin-top: 70px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            animation: fadeInUp 0.8s ease 0.2s both;
+        }
+
+        .cta-button {
+            background: white;
+            color: #667eea;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: bold;
+            animation: fadeInUp 0.8s ease 0.4s both;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Filter Section */
+        .filter-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1.5rem;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            border-color: #667eea;
+            color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Listings Grid */
+        .listings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .listing-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .listing-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 25px rgba(0,0,0,0.15);
+        }
+
+        .listing-type {
+            display: inline-block;
+            padding: 0.25rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .type-offer {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .type-request {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .brand-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .brand-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .brand-details h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .brand-details p {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .listing-content {
+            margin-bottom: 1rem;
+        }
+
+        .listing-content h4 {
+            font-size: 1rem;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .listing-content p {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .listing-tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .tag {
+            padding: 0.25rem 0.75rem;
+            background: #f0f0f0;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            color: #555;
+        }
+
+        .listing-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #f0f0f0;
+            padding-top: 1rem;
+        }
+
+        .contact-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .contact-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .listing-date {
+            font-size: 0.85rem;
+            color: #999;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 2rem;
+            border-radius: 15px;
+            position: relative;
+            animation: slideIn 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.3s ease;
+        }
+
+        .close-modal:hover {
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Setup Instructions */
+        .setup-section {
+            background: #e3f2fd;
+            padding: 2rem;
+            margin: 2rem auto;
+            max-width: 800px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .setup-section h2 {
+            color: #1976d2;
+            margin-bottom: 1rem;
+        }
+
+        .setup-section ol {
+            text-align: left;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 2;
+        }
+
+        .setup-section code {
+            background: #f5f5f5;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        /* Features Section */
+        .features {
+            background: white;
+            padding: 3rem 0;
+            margin: 3rem 0;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .feature-card {
+            text-align: center;
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .feature-card h3 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* Success Message */
+        .success-message {
+            position: fixed;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #4caf50;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            z-index: 3000;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateX(-50%); }
+            to { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .listings-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-buttons {
+                display: none;
+            }
+            
+            .modal-content {
+                margin: 20px auto;
+                height: calc(100vh - 40px);
+                max-height: none;
+                border-radius: 15px 15px 0 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="nav-container">
+            <div class="logo">🚀 AdSpace Connect</div>
+            <div class="nav-buttons">
+                <button class="btn btn-outline" onclick="showModal()">發布需求</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>品牌廣告版位媒合平台</h1>
+        <p>讓您的廣告留言成為最有價值的行銷資產</p>
+        <button class="btn cta-button" onclick="showModal()">立即發布您的需求</button>
+    </section>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Setup Instructions -->
+        <div class="setup-section" id="setupSection" style="display: none;">
+            <h2>🚀 快速設定 Supabase（免費資料庫）</h2>
+            <ol>
+                <li>前往 <a href="https://supabase.com" target="_blank">Supabase</a> 註冊免費帳號</li>
+                <li>建立新專案（選擇離您最近的地區）</li>
+                <li>在 SQL Editor 中執行以下指令建立資料表：
+                    <pre style="background: #f5f5f5; padding: 1rem; border-radius: 8px; margin: 1rem 0; text-align: left;">
+CREATE TABLE listings (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at TIMESTAMP DEFAULT NOW(),
+  type TEXT NOT NULL,
+  brand TEXT NOT NULL,
+  category TEXT NOT NULL,
+  description TEXT NOT NULL,
+  contact TEXT NOT NULL
+);
+
+-- 開啟即時更新
+ALTER TABLE listings REPLICA IDENTITY FULL;
+
+-- 允許匿名使用者讀寫
+CREATE POLICY "Enable all access for all users" ON listings
+FOR ALL USING (true) WITH CHECK (true);</pre>
+                </li>
+                <li>在 Settings → API 中找到：
+                    <ul style="margin: 0.5rem 0;">
+                        <li>Project URL（例如：https://xxx.supabase.co）</li>
+                        <li>anon public key（很長的一串文字）</li>
+                    </ul>
+                </li>
+                <li>將這兩個值更新到下方程式碼中的對應位置</li>
+            </ol>
+            <button class="btn cta-button" style="margin-top: 1rem;" onclick="document.getElementById('setupSection').style.display='none'">我已完成設定</button>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <div class="filter-buttons">
+                <button class="filter-btn active" onclick="filterListings('all')">全部</button>
+                <button class="filter-btn" onclick="filterListings('offer')">出租版位</button>
+                <button class="filter-btn" onclick="filterListings('request')">尋找版位</button>
+                <button class="filter-btn" onclick="filterListings('sports')">運動健身</button>
+                <button class="filter-btn" onclick="filterListings('fashion')">時尚服飾</button>
+                <button class="filter-btn" onclick="filterListings('food')">餐飲美食</button>
+            </div>
+        </div>
+
+        <!-- Listings Grid -->
+        <div id="listingsGrid" class="listings-grid">
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <p>正在載入最新需求...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="features-grid">
+            <div class="feature-card">
+                <span class="feature-icon">🤝</span>
+                <h3>品牌互惠合作</h3>
+                <p>透過廣告留言版位交換，讓互補品牌達到雙贏效果，擴大品牌曝光度。</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">📊</span>
+                <h3>即時更新列表</h3>
+                <p>使用 Supabase 即時資料庫，資料立即同步，所有人都能看到最新需求。</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">💎</span>
+                <h3>提升品牌信任</h3>
+                <p>品牌官方帳號互動，建立專業形象，提高消費者信任度。</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">🚀</span>
+                <h3>快速簡單上手</h3>
+                <p>簡單三步驟：發布需求、配對品牌、開始合作。無需複雜流程。</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal -->
+    <div id="postModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <h2 style="margin-bottom: 1.5rem; color: #333;">發布您的需求</h2>
+            <form id="postForm">
+                <div class="form-group">
+                    <label>需求類型</label>
+                    <select name="type" required>
+                        <option value="">請選擇</option>
+                        <option value="offer">我要出租廣告版位</option>
+                        <option value="request">我要尋找廣告版位</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>品牌名稱</label>
+                    <input type="text" name="brand" placeholder="例如：FitLife 健身中心" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>產業類別</label>
+                    <select name="category" required>
+                        <option value="">請選擇</option>
+                        <option value="運動健身">運動健身</option>
+                        <option value="時尚服飾">時尚服飾</option>
+                        <option value="餐飲美食">餐飲美食</option>
+                        <option value="科技產品">科技產品</option>
+                        <option value="美妝保養">美妝保養</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>需求說明</label>
+                    <textarea name="description" placeholder="請詳細說明您的需求、目標受眾、預期效果等..." required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>聯絡方式</label>
+                    <input type="text" name="contact" placeholder="Email 或電話" required>
+                </div>
+                
+                <button type="submit" class="submit-btn">發布需求</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Supabase SDK -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+    
+    <script>
+        // 等待 SDK 載入完成
+        window.addEventListener('load', function() {
+            // Supabase 設定
+            const SUPABASE_URL = 'https://zocpqjlnckmnloalmeeo.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvY3BxamxuY2ttbmxvYWxtZWVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMTk5OTEsImV4cCI6MjA2NjY5NTk5MX0.Mzh60p7mNpT1QBC3gBUNVx5N6XIQgoAC0MQ9kfLAcV8';
+            
+            // 初始化 Supabase
+            let supabase = null;
+            if (window.supabase) {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            }
+
+        // 全域變數
+        let allListings = [];
+        let currentFilter = 'all';
+
+        // 顯示/關閉 Modal
+        function showModal() {
+            document.getElementById('postModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('postModal').style.display = 'none';
+        }
+
+        // 點擊外部關閉 Modal
+        window.onclick = function(event) {
+            const modal = document.getElementById('postModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+
+        // 建立列表卡片
+        function createListingCard(data) {
+            // 確保資料存在
+            if (!data) return '';
+            
+            const typeClass = data.type === 'offer' ? 'type-offer' : 'type-request';
+            const typeText = data.type === 'offer' ? '提供版位' : '尋找版位';
+            const initial = data.brand ? data.brand.charAt(0).toUpperCase() : '?';
+            const contact = data.contact || '未提供';
+            const createdAt = data.created_at || new Date().toISOString();
+            
+            return `
+                <div class="listing-card" data-type="${data.type}" data-category="${data.category}">
+                    <span class="listing-type ${typeClass}">${typeText}</span>
+                    <div class="brand-info">
+                        <div class="brand-avatar">${initial}</div>
+                        <div class="brand-details">
+                            <h3>${data.brand || '未知品牌'}</h3>
+                            <p>${data.category || '其他'}</p>
+                        </div>
+                    </div>
+                    <div class="listing-content">
+                        <h4>${typeText}</h4>
+                        <p>${data.description || '暫無說明'}</p>
+                    </div>
+                    <div class="listing-tags">
+                        <span class="tag">${data.category || '其他'}</span>
+                        ${isNewListing(createdAt) ? '<span class="tag">新發布</span>' : ''}
+                    </div>
+                    <div class="listing-footer">
+                        <button class="contact-btn" onclick="showContact('${contact.replace(/'/g, "\\'")}')">聯繫合作</button>
+                        <span class="listing-date">${formatDate(createdAt)}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 檢查是否為新發布（24小時內）
+        function isNewListing(dateString) {
+            if (!dateString) return false;
+            try {
+                const date = new Date(dateString);
+                const now = new Date();
+                const hoursDiff = (now - date) / (1000 * 60 * 60);
+                return hoursDiff < 24;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        // 格式化日期
+        function formatDate(dateString) {
+            if (!dateString) return '剛剛';
+            try {
+                const date = new Date(dateString);
+                const now = new Date();
+                const diff = now - date;
+                
+                const minutes = Math.floor(diff / 60000);
+                const hours = Math.floor(diff / 3600000);
+                const days = Math.floor(diff / 86400000);
+                
+                if (minutes < 60) return `${minutes}分鐘前`;
+                if (hours < 24) return `${hours}小時前`;
+                if (days < 7) return `${days}天前`;
+                
+                return date.toLocaleDateString('zh-TW');
+            } catch (e) {
+                return '不久前';
+            }
+        }
+
+        // 顯示聯絡資訊
+        function showContact(contact) {
+            alert(`聯絡方式：${contact}`);
+        }
+
+        // 載入資料
+        async function loadListings() {
+            const grid = document.getElementById('listingsGrid');
+            
+            console.log('開始載入資料...');
+            console.log('Supabase 狀態:', supabase ? '已初始化' : '未初始化');
+            
+            if (!supabase) {
+                console.log('Supabase 未初始化，顯示範例資料');
+                showSampleData();
+                return;
+            }
+
+            try {
+                console.log('正在從 Supabase 讀取資料...');
+                const { data, error } = await supabase
+                    .from('listings')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                console.log('Supabase 回應:', { data, error });
+
+                if (error) {
+                    console.error('Supabase 錯誤:', error);
+                    throw error;
+                }
+
+                allListings = data || [];
+                console.log('載入了', allListings.length, '筆資料');
+                
+                if (allListings.length === 0) {
+                    grid.innerHTML = `
+                        <div style="grid-column: 1/-1; text-align: center; padding: 3rem;">
+                            <p style="color: #666; margin-bottom: 1rem;">目前還沒有任何需求</p>
+                            <button class="btn cta-button" onclick="showModal()">成為第一個發布需求的品牌</button>
+                        </div>
+                    `;
+                } else {
+                    displayListings();
+                }
+
+            } catch (error) {
+                console.error('載入資料錯誤:', error);
+                grid.innerHTML = `
+                    <div style="grid-column: 1/-1; background: #fee; border: 1px solid #fcc; padding: 2rem; border-radius: 8px; text-align: center;">
+                        <p style="color: #c33; margin-bottom: 1rem;">載入資料時發生錯誤</p>
+                        <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">錯誤訊息：${error.message}</p>
+                        <button class="btn cta-button" onclick="showSampleData()">顯示範例資料</button>
+                    </div>
+                `;
+            }
+        }
+
+        // 顯示列表
+        function displayListings() {
+            const grid = document.getElementById('listingsGrid');
+            
+            let filteredListings = allListings;
+            
+            if (currentFilter !== 'all') {
+                if (currentFilter === 'offer' || currentFilter === 'request') {
+                    filteredListings = allListings.filter(item => item.type === currentFilter);
+                } else {
+                    const categoryMap = {
+                        'sports': '運動健身',
+                        'fashion': '時尚服飾',
+                        'food': '餐飲美食'
+                    };
+                    const category = categoryMap[currentFilter];
+                    filteredListings = allListings.filter(item => item.category === category);
+                }
+            }
+
+            if (filteredListings.length === 0) {
+                grid.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 3rem;">
+                        <p style="color: #666; margin-bottom: 1rem;">目前沒有符合條件的需求</p>
+                        <button class="btn cta-button" onclick="showModal()">成為第一個發布需求的品牌</button>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = filteredListings.map(createListingCard).join('');
+        }
+
+        // 顯示範例資料
+        function showSampleData() {
+            allListings = [
+                {
+                    id: '1',
+                    created_at: new Date().toISOString(),
+                    type: 'offer',
+                    brand: 'FitLife 健身中心',
+                    category: '運動健身',
+                    description: '我們最新的拳擊課程廣告獲得高度關注，日觸及超過 50,000 人。歡迎運動品牌、營養補充品等相關產業合作。',
+                    contact: 'marketing@fitlife.com'
+                },
+                {
+                    id: '2',
+                    created_at: new Date(Date.now() - 5 * 3600000).toISOString(),
+                    type: 'request',
+                    brand: 'PowerGlove 運動手套',
+                    category: '運動健身',
+                    description: '我們是專業拳擊裝備品牌，希望在健身房、運動中心的廣告下方展示我們的產品。預算充足，長期合作優先。',
+                    contact: 'contact@powerglove.tw'
+                },
+                {
+                    id: '3',
+                    created_at: new Date(Date.now() - 24 * 3600000).toISOString(),
+                    type: 'offer',
+                    brand: 'CaféCloud 雲端咖啡',
+                    category: '餐飲美食',
+                    description: '即將推出春季新品廣告，預計觸及百萬用戶。適合甜點、烘焙、生活風格品牌合作。',
+                    contact: 'ad@cafecloud.com'
+                }
+            ];
+            
+            displayListings();
+        }
+
+        // 篩選功能
+        function filterListings(filter) {
+            currentFilter = filter;
+            
+            // 更新按鈕狀態
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent.includes('全部') && filter === 'all') btn.classList.add('active');
+                else if (btn.textContent.includes('出租') && filter === 'offer') btn.classList.add('active');
+                else if (btn.textContent.includes('尋找') && filter === 'request') btn.classList.add('active');
+                else if (btn.textContent.includes('運動') && filter === 'sports') btn.classList.add('active');
+                else if (btn.textContent.includes('時尚') && filter === 'fashion') btn.classList.add('active');
+                else if (btn.textContent.includes('餐飲') && filter === 'food') btn.classList.add('active');
+            });
+            
+            displayListings();
+        }
+
+        // 處理表單提交
+        document.getElementById('postForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const submitBtn = this.querySelector('.submit-btn');
+            
+            submitBtn.textContent = '提交中...';
+            submitBtn.disabled = true;
+            
+            const newListing = {
+                type: formData.get('type'),
+                brand: formData.get('brand'),
+                category: formData.get('category'),
+                description: formData.get('description'),
+                contact: formData.get('contact')
+            };
+            
+            try {
+                if (supabase) {
+                    // 儲存到 Supabase
+                    const { data, error } = await supabase
+                        .from('listings')
+                        .insert([newListing])
+                        .select();
+                    
+                    if (error) throw error;
+                    
+                    // 重新載入資料
+                    await loadListings();
+                } else {
+                    // 本地預覽
+                    newListing.id = Date.now().toString();
+                    newListing.created_at = new Date().toISOString();
+                    allListings.unshift(newListing);
+                    displayListings();
+                    
+                    setTimeout(() => {
+                        alert('提醒：目前為預覽模式，資料不會永久儲存。\n請完成 Supabase 設定以啟用完整功能。');
+                    }, 1000);
+                }
+                
+                showSuccessMessage();
+                closeModal();
+                this.reset();
+                
+            } catch (error) {
+                console.error('提交錯誤:', error);
+                alert('提交失敗，請稍後再試');
+            } finally {
+                submitBtn.textContent = '發布需求';
+                submitBtn.disabled = false;
+            }
+        });
+
+        // 顯示成功訊息
+        function showSuccessMessage() {
+            const message = document.createElement('div');
+            message.className = 'success-message';
+            message.textContent = '需求已成功發布！';
+            document.body.appendChild(message);
+            
+            setTimeout(() => {
+                message.style.animation = 'fadeOut 0.3s ease';
+                setTimeout(() => message.remove(), 300);
+            }, 3000);
+        }
+
+        // 初始化
+        window.addEventListener('load', () => {
+            // 延遲一下確保 Supabase SDK 載入完成
+            setTimeout(() => {
+                loadListings();
+                
+                // 如果有設定 Supabase，啟用即時更新
+                if (supabase) {
+                    const channel = supabase
+                        .channel('listings-changes')
+                        .on('postgres_changes', 
+                            { event: '*', schema: 'public', table: 'listings' }, 
+                            () => loadListings()
+                        )
+                        .subscribe();
+                }
+            }, 100);
+        });
+        });  // 結束 window.onload
+    </script>
+</body>
+</html>

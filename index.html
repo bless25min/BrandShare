@@ -608,6 +608,58 @@
         let allListings = [];
         let currentFilter = 'all';
         
+        // 使用 Supabase RPC 驗證管理員密碼
+        async function verifyAdminPassword(password) {
+            if (!supabaseClient) return false;
+            
+            try {
+                const { data, error } = await supabaseClient.rpc('verify_admin_password', {
+                    input_password: password
+                });
+                
+                if (error) {
+                    console.error('管理員密碼驗證錯誤:', error);
+                    return false;
+                }
+                
+                return data === true;
+            } catch (error) {
+                console.error('密碼驗證錯誤:', error);
+                return false;
+            }
+        }
+        
+        // 使用 Supabase RPC 生成密碼雜湊
+        async function hashPassword(password) {
+            if (!supabaseClient) {
+                // 前端備用雜湊方法
+                const encoder = new TextEncoder();
+                const data = encoder.encode(password);
+                const hash = await crypto.subtle.digest('SHA-256', data);
+                return Array.from(new Uint8Array(hash))
+                    .map(b => b.toString(16).padStart(2, '0'))
+                    .join('');
+            }
+            
+            try {
+                const { data, error } = await supabaseClient.rpc('hash_password', {
+                    password: password
+                });
+                
+                if (error) throw error;
+                return data;
+            } catch (error) {
+                console.error('密碼雜湊錯誤:', error);
+                // 使用前端備用方法
+                const encoder = new TextEncoder();
+                const data = encoder.encode(password);
+                const hash = await crypto.subtle.digest('SHA-256', data);
+                return Array.from(new Uint8Array(hash))
+                    .map(b => b.toString(16).padStart(2, '0'))
+                    .join('');
+            }
+        }
+        
         // Modal 控制
         function showModal() {
             document.getElementById('postModal').style.display = 'block';
@@ -627,7 +679,7 @@
         }
         
         // 編輯項目
-        function editListing(id) {
+        async function editListing(id) {
             const listing = allListings.find(item => item.id === id);
             if (!listing) {
                 alert('找不到此項目！');
@@ -635,25 +687,67 @@
             }
             
             const password = prompt('請輸入此項目的管理密碼：');
-            if (listing.password && password !== listing.password && password !== 'admin2024') {
-                alert('密碼錯誤！');
-                return;
+            if (!password) return;
+            
+            try {
+                // 驗證密碼
+                let isAuthorized = false;
+                
+                if (supabaseClient) {
+                    // 檢查是否為管理員
+                    const { data: isAdmin } = await supabaseClient.rpc('verify_admin_password', {
+                        input_password: password
+                    });
+                    
+                    if (isAdmin) {
+                        isAuthorized = true;
+                    } else {
+                        // 檢查是否為項目密碼
+                        const { data: userHash } = await supabaseClient.rpc('hash_password', {
+                            password: password
+                        });
+                        
+                        if (listing.password_hash === userHash || listing.password === password) {
+                            isAuthorized = true;
+                        }
+                    }
+                } else {
+                    // 本地模式的密碼驗證
+                    if (listing.password_hash) {
+                        const inputHash = await hashPassword(password);
+                        isAuthorized = inputHash === listing.password_hash;
+                    } else if (listing.password) {
+                        isAuthorized = password === listing.password;
+                    }
+                    
+                    if (!isAuthorized) {
+                        isAuthorized = await verifyAdminPassword(password);
+                    }
+                }
+                
+                if (!isAuthorized) {
+                    alert('密碼錯誤！');
+                    return;
+                }
+                
+                // 填入表單
+                document.querySelector('select[name="type"]').value = listing.type;
+                document.querySelector('input[name="brand"]').value = listing.brand;
+                document.querySelector('select[name="category"]').value = listing.category;
+                document.querySelector('textarea[name="description"]').value = listing.description;
+                document.querySelector('input[name="contact"]').value = listing.contact;
+                document.querySelector('input[name="password"]').value = '';
+                document.querySelector('input[name="password"]').placeholder = '留空則保持原密碼';
+                
+                // 設定編輯模式
+                document.getElementById('postForm').dataset.editId = id;
+                document.querySelector('.submit-btn').textContent = '更新需求';
+                
+                showModal();
+            } catch (error) {
+                console.error('編輯驗證錯誤:', error);
+                alert('驗證失敗，請稍後再試！');
             }
-            
-            // 填入表單
-            document.querySelector('select[name="type"]').value = listing.type;
-            document.querySelector('input[name="brand"]').value = listing.brand;
-            document.querySelector('select[name="category"]').value = listing.category;
-            document.querySelector('textarea[name="description"]').value = listing.description;
-            document.querySelector('input[name="contact"]').value = listing.contact;
-            document.querySelector('input[name="password"]').value = '';
-            document.querySelector('input[name="password"]').placeholder = '留空則保持原密碼';
-            
-            // 設定編輯模式
-            document.getElementById('postForm').dataset.editId = id;
-            document.querySelector('.submit-btn').textContent = '更新需求';
-            
-            showModal();
         }
         
         // 刪除項目
@@ -665,27 +759,71 @@
             }
             
             const password = prompt('請輸入此項目的管理密碼：');
-            if (listing.password && password !== listing.password && password !== 'admin2024') {
-                alert('密碼錯誤！');
-                return;
-            }
+            if (!password) return;
             
             if (!confirm('確定要刪除此項目嗎？')) {
                 return;
             }
             
             try {
+                // 驗證密碼
+                let isAuthorized = false;
+                
                 if (supabaseClient) {
+                    // 檢查是否為管理員
+                    const { data: isAdmin } = await supabaseClient.rpc('verify_admin_password', {
+                        input_password: password
+                    });
+                    
+                    if (isAdmin) {
+                        isAuthorized = true;
+                    } else {
+                        // 檢查是否為項目密碼
+                        const { data: userHash } = await supabaseClient.rpc('hash_password', {
+                            password: password
+                        });
+                        
+                        if (listing.password_hash === userHash || listing.password === password) {
+                            isAuthorized = true;
+                        }
+                    }
+                    
+                    if (!isAuthorized) {
+                        alert('密碼錯誤或無權限刪除此項目！');
+                        return;
+                    }
+                    
                     const { error } = await supabaseClient
                         .from('listings')
                         .delete()
                         .eq('id', id);
                     
-                    if (error) throw error;
+                    if (error) {
+                        console.error('刪除錯誤:', error);
+                        alert('刪除失敗！');
+                        return;
+                    }
                     
                     showMessage('刪除成功！');
                     await loadListings();
                 } else {
+                    // 本地模式的密碼驗證
+                    if (listing.password_hash) {
+                        const inputHash = await hashPassword(password);
+                        isAuthorized = inputHash === listing.password_hash;
+                    } else if (listing.password) {
+                        isAuthorized = password === listing.password;
+                    }
+                    
+                    if (!isAuthorized) {
+                        isAuthorized = await verifyAdminPassword(password);
+                    }
+                    
+                    if (!isAuthorized) {
+                        alert('密碼錯誤！');
+                        return;
+                    }
+                    
                     allListings = allListings.filter(item => item.id !== id);
                     displayListings();
                     showMessage('刪除成功！（僅本地預覽）');
@@ -847,7 +985,7 @@
                     category: '運動健身',
                     description: '我們最新的拳擊課程廣告獲得高度關注，日觸及超過 50,000 人。',
                     contact: 'marketing@fitlife.com',
-                    password: 'demo'
+                    password_hash: 'demo_hash' // 應該是實際的雜湊值
                 },
                 {
                     id: '2',
@@ -857,7 +995,7 @@
                     category: '運動健身',
                     description: '尋找健身房廣告版位，預算充足，長期合作優先。',
                     contact: 'contact@powerglove.tw',
-                    password: 'demo'
+                    password_hash: 'demo_hash' // 應該是實際的雜湊值
                 }
             ];
             displayListings();
@@ -890,17 +1028,31 @@
                     brand: formData.get('brand'),
                     category: formData.get('category'),
                     description: formData.get('description'),
-                    contact: formData.get('contact'),
-                    password: formData.get('password')
+                    contact: formData.get('contact')
                 };
+                
+                // 如果有設定新密碼，進行雜湊處理
+                const password = formData.get('password');
+                if (password) {
+                    if (supabaseClient) {
+                        const { data: hashedPassword } = await supabaseClient.rpc('hash_password', {
+                            password: password
+                        });
+                        listing.password_hash = hashedPassword;
+                    } else {
+                        listing.password_hash = await hashPassword(password);
+                    }
+                }
                 
                 try {
                     if (supabaseClient) {
                         if (editId) {
-                            // 更新
-                            if (!listing.password) {
+                            // 如果沒有新密碼，保持原密碼雜湊
+                            if (!password) {
                                 const oldListing = allListings.find(item => item.id === editId);
-                                listing.password = oldListing.password;
+                                if (oldListing.password_hash) {
+                                    listing.password_hash = oldListing.password_hash;
+                                }
                             }
                             
                             const { error } = await supabaseClient
@@ -922,12 +1074,12 @@
                         
                         await loadListings();
                     } else {
-                        // 本地模式
+                        // 本地模式（demo）
                         if (editId) {
                             const index = allListings.findIndex(item => item.id === editId);
                             if (index !== -1) {
-                                if (!listing.password) {
-                                    listing.password = allListings[index].password;
+                                if (!password) {
+                                    listing.password_hash = allListings[index].password_hash;
                                 }
                                 allListings[index] = { ...allListings[index], ...listing };
                             }

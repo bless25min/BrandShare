@@ -1,70 +1,1101 @@
--- 更新資料表結構，使用雜湊密碼
-ALTER TABLE listings 
-ADD COLUMN IF NOT EXISTS password_hash TEXT,
-ADD COLUMN IF NOT EXISTS admin_managed BOOLEAN DEFAULT FALSE;
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AdSpace Connect - 廣告版位媒合平台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
--- 建立管理員驗證函數
-CREATE OR REPLACE FUNCTION verify_admin_password(input_password TEXT)
-RETURNS BOOLEAN
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
-DECLARE
-    admin_hash TEXT;
-BEGIN
-    -- 從 Supabase secrets 或配置表取得管理員密碼雜湊
-    -- 這裡暫時使用硬編碼，實際應用時請使用 vault.secrets
-    admin_hash := 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'; -- 空字串的 SHA256，請更換為實際雜湊
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .btn {
+            padding: 0.5rem 1.5rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-outline:hover {
+            background: white;
+            color: #667eea;
+        }
+
+        /* Hero Section */
+        .hero {
+            margin-top: 70px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .cta-button {
+            background: white;
+            color: #667eea;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Filter Section */
+        .filter-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1.5rem;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            border-color: #667eea;
+            color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+
+        /* Listings Grid */
+        .listings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .listing-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .listing-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 25px rgba(0,0,0,0.15);
+        }
+
+        .listing-type {
+            display: inline-block;
+            padding: 0.25rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .type-offer {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .type-request {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .brand-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .brand-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .brand-details h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .brand-details p {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .listing-content {
+            margin-bottom: 1rem;
+        }
+
+        .listing-content h4 {
+            font-size: 1rem;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .listing-content p {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .listing-tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .tag {
+            padding: 0.25rem 0.75rem;
+            background: #f0f0f0;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            color: #555;
+        }
+
+        .listing-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #f0f0f0;
+            padding-top: 1rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .contact-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .contact-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .listing-date {
+            font-size: 0.85rem;
+            color: #999;
+        }
+
+        .admin-actions {
+            display: flex;
+            gap: 0.5rem;
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.75rem;
+            font-size: 0.8rem;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-edit {
+            background: #4caf50;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: #45a049;
+        }
+
+        .btn-delete {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #da190b;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+        }
+
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 2rem;
+            border-radius: 15px;
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .close-modal:hover {
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Success Message */
+        .success-message {
+            position: fixed;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #4caf50;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            z-index: 3000;
+        }
+
+        /* Features Section */
+        .features {
+            background: white;
+            padding: 3rem 0;
+            margin: 3rem 0;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .feature-card {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .feature-card h3 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .listings-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .modal-content {
+                margin: 20px auto;
+                height: calc(100vh - 40px);
+                max-height: none;
+                border-radius: 15px 15px 0 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="nav-container">
+            <div class="logo">🚀 AdSpace Connect</div>
+            <div class="nav-buttons">
+                <button class="btn btn-outline" onclick="showModal()">發布需求</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>品牌廣告版位媒合平台</h1>
+        <p>讓您的廣告留言成為最有價值的行銷資產</p>
+        <button class="btn cta-button" onclick="showModal()">立即發布您的需求</button>
+    </section>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <div class="filter-buttons">
+                <button class="filter-btn active" onclick="filterListings('all')">全部</button>
+                <button class="filter-btn" onclick="filterListings('offer')">出租版位</button>
+                <button class="filter-btn" onclick="filterListings('request')">尋找版位</button>
+                <button class="filter-btn" onclick="filterListings('sports')">運動健身</button>
+                <button class="filter-btn" onclick="filterListings('fashion')">時尚服飾</button>
+                <button class="filter-btn" onclick="filterListings('food')">餐飲美食</button>
+            </div>
+        </div>
+
+        <!-- Listings Grid -->
+        <div id="listingsGrid" class="listings-grid">
+            <div class="loading">
+                <p>正在載入最新需求...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="features-grid">
+            <div class="feature-card">
+                <span class="feature-icon">🤝</span>
+                <h3>品牌互惠合作</h3>
+                <p>透過廣告留言版位交換，讓互補品牌達到雙贏效果，擴大品牌曝光度。</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">📊</span>
+                <h3>即時更新列表</h3>
+                <p>使用 Supabase 即時資料庫，資料立即同步，所有人都能看到最新需求。</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">💎</span>
+                <h3>提升品牌信任</h3>
+                <p>品牌官方帳號互動，建立專業形象，提高消費者信任度。</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">🚀</span>
+                <h3>快速簡單上手</h3>
+                <p>簡單三步驟：發布需求、配對品牌、開始合作。無需複雜流程。</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal -->
+    <div id="postModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <h2 style="margin-bottom: 1.5rem; color: #333;">發布您的需求</h2>
+            <form id="postForm">
+                <div class="form-group">
+                    <label>需求類型</label>
+                    <select name="type" required>
+                        <option value="">請選擇</option>
+                        <option value="offer">我要出租廣告版位</option>
+                        <option value="request">我要尋找廣告版位</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>品牌名稱</label>
+                    <input type="text" name="brand" placeholder="例如：FitLife 健身中心" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>產業類別</label>
+                    <select name="category" required>
+                        <option value="">請選擇</option>
+                        <option value="運動健身">運動健身</option>
+                        <option value="時尚服飾">時尚服飾</option>
+                        <option value="餐飲美食">餐飲美食</option>
+                        <option value="科技產品">科技產品</option>
+                        <option value="美妝保養">美妝保養</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>需求說明</label>
+                    <textarea name="description" placeholder="請詳細說明您的需求、目標受眾、預期效果等..." required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>聯絡方式</label>
+                    <input type="text" name="contact" placeholder="Email 或電話" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>設定管理密碼 <small style="color: #666;">（用於日後編輯/刪除）</small></label>
+                    <input type="password" name="password" placeholder="請設定密碼" required>
+                </div>
+                
+                <button type="submit" class="submit-btn">發布需求</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
     
-    -- 計算輸入密碼的 SHA256 雜湊 (需要 pgcrypto 擴展)
-    RETURN encode(digest(input_password, 'sha256'), 'hex') = admin_hash;
-END;
-$$;
-
--- 啟用 pgcrypto 擴展以支援雜湊功能
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
-
--- 建立密碼雜湊函數
-CREATE OR REPLACE FUNCTION hash_password(password TEXT)
-RETURNS TEXT
-LANGUAGE plpgsql
-AS $$
-BEGIN
-    RETURN encode(digest(password, 'sha256'), 'hex');
-END;
-$$;
-
--- 更新 RLS policies 以支援密碼驗證
-DROP POLICY IF EXISTS "Enable read access for all users" ON listings;
-DROP POLICY IF EXISTS "Enable insert access for all users" ON listings;
-DROP POLICY IF EXISTS "Enable update access for all users" ON listings;
-DROP POLICY IF EXISTS "Enable delete access for all users" ON listings;
-
--- 讀取權限：所有人都可以讀取
-CREATE POLICY "Enable read access for all users" ON listings
-FOR SELECT USING (true);
-
--- 插入權限：所有人都可以插入
-CREATE POLICY "Enable insert access for all users" ON listings
-FOR INSERT WITH CHECK (true);
-
--- 更新權限：只能更新自己的記錄（通過密碼驗證）
-CREATE POLICY "Enable update with password verification" ON listings
-FOR UPDATE USING (
-    -- 允許管理員更新任何記錄
-    verify_admin_password(current_setting('app.user_password', true)) OR
-    -- 或者密碼雜湊匹配的記錄
-    password_hash = hash_password(current_setting('app.user_password', true))
-);
-
--- 刪除權限：只能刪除自己的記錄（通過密碼驗證）
-CREATE POLICY "Enable delete with password verification" ON listings
-FOR DELETE USING (
-    -- 允許管理員刪除任何記錄
-    verify_admin_password(current_setting('app.user_password', true)) OR
-    -- 或者密碼雜湊匹配的記錄
-    password_hash = hash_password(current_setting('app.user_password', true))
-);
-
--- 確認 RLS 是啟用的
-ALTER TABLE listings ENABLE ROW LEVEL SECURITY;
+    <script>
+        // Supabase 設定
+        const SUPABASE_URL = 'https://zocpqjlnckmnloalmeeo.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvY3BxamxuY2ttbmxvYWxtZWVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMTk5OTEsImV4cCI6MjA2NjY5NTk5MX0.Mzh60p7mNpT1QBC3gBUNVx5N6XIQgoAC0MQ9kfLAcV8';
+        
+        // 全域變數
+        let supabaseClient = null;
+        let allListings = [];
+        let currentFilter = 'all';
+        
+        // 使用 Supabase RPC 驗證管理員密碼
+        async function verifyAdminPassword(password) {
+            if (!supabaseClient) return false;
+            
+            try {
+                const { data, error } = await supabaseClient.rpc('verify_admin_password', {
+                    input_password: password
+                });
+                
+                if (error) {
+                    console.error('管理員密碼驗證錯誤:', error);
+                    return false;
+                }
+                
+                return data === true;
+            } catch (error) {
+                console.error('密碼驗證錯誤:', error);
+                return false;
+            }
+        }
+        
+        // 使用 Supabase RPC 生成密碼雜湊
+        async function hashPassword(password) {
+            if (!supabaseClient) {
+                // 前端備用雜湊方法
+                const encoder = new TextEncoder();
+                const data = encoder.encode(password);
+                const hash = await crypto.subtle.digest('SHA-256', data);
+                return Array.from(new Uint8Array(hash))
+                    .map(b => b.toString(16).padStart(2, '0'))
+                    .join('');
+            }
+            
+            try {
+                const { data, error } = await supabaseClient.rpc('hash_password', {
+                    password: password
+                });
+                
+                if (error) throw error;
+                return data;
+            } catch (error) {
+                console.error('密碼雜湊錯誤:', error);
+                // 使用前端備用方法
+                const encoder = new TextEncoder();
+                const data = encoder.encode(password);
+                const hash = await crypto.subtle.digest('SHA-256', data);
+                return Array.from(new Uint8Array(hash))
+                    .map(b => b.toString(16).padStart(2, '0'))
+                    .join('');
+            }
+        }
+        
+        // Modal 控制
+        function showModal() {
+            document.getElementById('postModal').style.display = 'block';
+        }
+        
+        function closeModal() {
+            document.getElementById('postModal').style.display = 'none';
+            // 重置表單
+            document.getElementById('postForm').reset();
+            delete document.getElementById('postForm').dataset.editId;
+            document.querySelector('.submit-btn').textContent = '發布需求';
+        }
+        
+        // 顯示聯絡資訊
+        function showContact(contact) {
+            alert('聯絡方式：' + contact);
+        }
+        
+        // 編輯項目
+        async function editListing(id) {
+            const listing = allListings.find(item => item.id === id);
+            if (!listing) {
+                alert('找不到此項目！');
+                return;
+            }
+            
+            const password = prompt('請輸入此項目的管理密碼：');
+            if (!password) return;
+            
+            try {
+                // 設定密碼到 Supabase 會話中用於 RLS 驗證
+                if (supabaseClient) {
+                    // 嘗試使用密碼更新記錄以驗證權限
+                    const { error: testError } = await supabaseClient.rpc('set_config', {
+                        setting_name: 'app.user_password',
+                        setting_value: password,
+                        is_local: true
+                    });
+                    
+                    // 測試是否有權限更新此記錄
+                    const { error: updateError } = await supabaseClient
+                        .from('listings')
+                        .update({ updated_at: new Date().toISOString() })
+                        .eq('id', id);
+                    
+                    if (updateError) {
+                        alert('密碼錯誤或無權限編輯此項目！');
+                        return;
+                    }
+                } else {
+                    // 本地模式的密碼驗證
+                    let isAuthorized = false;
+                    
+                    if (listing.password_hash) {
+                        const inputHash = await hashPassword(password);
+                        isAuthorized = inputHash === listing.password_hash;
+                    } else if (listing.password) {
+                        isAuthorized = password === listing.password;
+                    }
+                    
+                    if (!isAuthorized) {
+                        isAuthorized = await verifyAdminPassword(password);
+                    }
+                    
+                    if (!isAuthorized) {
+                        alert('密碼錯誤！');
+                        return;
+                    }
+                }
+                
+                // 填入表單
+                document.querySelector('select[name="type"]').value = listing.type;
+                document.querySelector('input[name="brand"]').value = listing.brand;
+                document.querySelector('select[name="category"]').value = listing.category;
+                document.querySelector('textarea[name="description"]').value = listing.description;
+                document.querySelector('input[name="contact"]').value = listing.contact;
+                document.querySelector('input[name="password"]').value = '';
+                document.querySelector('input[name="password"]').placeholder = '留空則保持原密碼';
+                
+                // 設定編輯模式
+                document.getElementById('postForm').dataset.editId = id;
+                document.getElementById('postForm').dataset.editPassword = password;
+                document.querySelector('.submit-btn').textContent = '更新需求';
+                
+                showModal();
+            } catch (error) {
+                console.error('編輯驗證錯誤:', error);
+                alert('驗證失敗，請稍後再試！');
+            }
+        }
+        
+        // 刪除項目
+        async function deleteListing(id) {
+            const listing = allListings.find(item => item.id === id);
+            if (!listing) {
+                alert('找不到此項目！');
+                return;
+            }
+            
+            const password = prompt('請輸入此項目的管理密碼：');
+            if (!password) return;
+            
+            if (!confirm('確定要刪除此項目嗎？')) {
+                return;
+            }
+            
+            try {
+                if (supabaseClient) {
+                    // 設定密碼到 Supabase 會話中用於 RLS 驗證
+                    const { error: configError } = await supabaseClient.rpc('set_config', {
+                        setting_name: 'app.user_password',
+                        setting_value: password,
+                        is_local: true
+                    });
+                    
+                    const { error } = await supabaseClient
+                        .from('listings')
+                        .delete()
+                        .eq('id', id);
+                    
+                    if (error) {
+                        console.error('刪除錯誤:', error);
+                        alert('密碼錯誤或無權限刪除此項目！');
+                        return;
+                    }
+                    
+                    showMessage('刪除成功！');
+                    await loadListings();
+                } else {
+                    // 本地模式的密碼驗證
+                    let isAuthorized = false;
+                    
+                    if (listing.password_hash) {
+                        const inputHash = await hashPassword(password);
+                        isAuthorized = inputHash === listing.password_hash;
+                    } else if (listing.password) {
+                        isAuthorized = password === listing.password;
+                    }
+                    
+                    if (!isAuthorized) {
+                        isAuthorized = await verifyAdminPassword(password);
+                    }
+                    
+                    if (!isAuthorized) {
+                        alert('密碼錯誤！');
+                        return;
+                    }
+                    
+                    allListings = allListings.filter(item => item.id !== id);
+                    displayListings();
+                    showMessage('刪除成功！（僅本地預覽）');
+                }
+            } catch (error) {
+                console.error('刪除錯誤:', error);
+                alert('刪除失敗！');
+            }
+        }
+        
+        // 篩選列表
+        function filterListings(filter) {
+            currentFilter = filter;
+            
+            // 更新按鈕狀態
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            event.target.classList.add('active');
+            displayListings();
+        }
+        
+        // 建立列表卡片
+        function createListingCard(data) {
+            const typeClass = data.type === 'offer' ? 'type-offer' : 'type-request';
+            const typeText = data.type === 'offer' ? '提供版位' : '尋找版位';
+            const initial = data.brand.charAt(0).toUpperCase();
+            
+            return `
+                <div class="listing-card" data-type="${data.type}" data-category="${data.category}">
+                    <span class="listing-type ${typeClass}">${typeText}</span>
+                    <div class="brand-info">
+                        <div class="brand-avatar">${initial}</div>
+                        <div class="brand-details">
+                            <h3>${data.brand}</h3>
+                            <p>${data.category}</p>
+                        </div>
+                    </div>
+                    <div class="listing-content">
+                        <h4>${typeText}</h4>
+                        <p>${data.description}</p>
+                    </div>
+                    <div class="listing-tags">
+                        <span class="tag">${data.category}</span>
+                        ${isNewListing(data.created_at) ? '<span class="tag">新發布</span>' : ''}
+                    </div>
+                    <div class="listing-footer">
+                        <button class="contact-btn" onclick="showContact('${data.contact}')">聯繫合作</button>
+                        <span class="listing-date">${formatDate(data.created_at)}</span>
+                        <div class="admin-actions">
+                            <button class="btn-sm btn-edit" onclick="editListing('${data.id}')">編輯</button>
+                            <button class="btn-sm btn-delete" onclick="deleteListing('${data.id}')">刪除</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // 檢查是否為新發布
+        function isNewListing(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const hoursDiff = (now - date) / (1000 * 60 * 60);
+            return hoursDiff < 24;
+        }
+        
+        // 格式化日期
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+            
+            if (minutes < 60) return minutes + '分鐘前';
+            if (hours < 24) return hours + '小時前';
+            if (days < 7) return days + '天前';
+            
+            return date.toLocaleDateString('zh-TW');
+        }
+        
+        // 顯示訊息
+        function showMessage(text) {
+            const message = document.createElement('div');
+            message.className = 'success-message';
+            message.textContent = text;
+            document.body.appendChild(message);
+            
+            setTimeout(() => {
+                message.style.opacity = '0';
+                setTimeout(() => message.remove(), 300);
+            }, 3000);
+        }
+        
+        // 載入資料
+        async function loadListings() {
+            const grid = document.getElementById('listingsGrid');
+            
+            if (!supabaseClient) {
+                showSampleData();
+                return;
+            }
+            
+            try {
+                const { data, error } = await supabaseClient
+                    .from('listings')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                
+                allListings = data || [];
+                
+                if (allListings.length === 0) {
+                    grid.innerHTML = '<div style="text-align: center; padding: 3rem;"><p>目前還沒有任何需求</p></div>';
+                } else {
+                    displayListings();
+                }
+            } catch (error) {
+                console.error('載入錯誤:', error);
+                showSampleData();
+            }
+        }
+        
+        // 顯示列表
+        function displayListings() {
+            const grid = document.getElementById('listingsGrid');
+            let filteredListings = allListings;
+            
+            if (currentFilter !== 'all') {
+                if (currentFilter === 'offer' || currentFilter === 'request') {
+                    filteredListings = allListings.filter(item => item.type === currentFilter);
+                } else {
+                    const categoryMap = {
+                        'sports': '運動健身',
+                        'fashion': '時尚服飾',
+                        'food': '餐飲美食'
+                    };
+                    filteredListings = allListings.filter(item => 
+                        item.category === categoryMap[currentFilter]
+                    );
+                }
+            }
+            
+            grid.innerHTML = filteredListings.map(createListingCard).join('');
+        }
+        
+        // 顯示範例資料
+        function showSampleData() {
+            allListings = [
+                {
+                    id: '1',
+                    created_at: new Date().toISOString(),
+                    type: 'offer',
+                    brand: 'FitLife 健身中心',
+                    category: '運動健身',
+                    description: '我們最新的拳擊課程廣告獲得高度關注，日觸及超過 50,000 人。',
+                    contact: 'marketing@fitlife.com',
+                    password_hash: 'demo_hash' // 應該是實際的雜湊值
+                },
+                {
+                    id: '2',
+                    created_at: new Date(Date.now() - 5 * 3600000).toISOString(),
+                    type: 'request',
+                    brand: 'PowerGlove 運動手套',
+                    category: '運動健身',
+                    description: '尋找健身房廣告版位，預算充足，長期合作優先。',
+                    contact: 'contact@powerglove.tw',
+                    password_hash: 'demo_hash' // 應該是實際的雜湊值
+                }
+            ];
+            displayListings();
+        }
+        
+        // 初始化
+        window.addEventListener('DOMContentLoaded', function() {
+            // 初始化 Supabase
+            if (window.supabase) {
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                console.log('Supabase 初始化成功');
+            }
+            
+            // 載入資料
+            loadListings();
+            
+            // 設定表單提交
+            document.getElementById('postForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(this);
+                const submitBtn = this.querySelector('.submit-btn');
+                const editId = this.dataset.editId;
+                const editPassword = this.dataset.editPassword;
+                
+                submitBtn.disabled = true;
+                submitBtn.textContent = '提交中...';
+                
+                const listing = {
+                    type: formData.get('type'),
+                    brand: formData.get('brand'),
+                    category: formData.get('category'),
+                    description: formData.get('description'),
+                    contact: formData.get('contact')
+                };
+                
+                // 如果有設定新密碼，進行雜湊處理
+                const password = formData.get('password');
+                if (password) {
+                    listing.password_hash = await hashPassword(password);
+                }
+                
+                try {
+                    if (supabaseClient) {
+                        if (editId) {
+                            // 設定編輯密碼到會話中
+                            if (editPassword) {
+                                await supabaseClient.rpc('set_config', {
+                                    setting_name: 'app.user_password',
+                                    setting_value: editPassword,
+                                    is_local: true
+                                });
+                            }
+                            
+                            // 如果沒有新密碼，保持原密碼雜湊
+                            if (!password) {
+                                const oldListing = allListings.find(item => item.id === editId);
+                                if (oldListing.password_hash) {
+                                    listing.password_hash = oldListing.password_hash;
+                                }
+                            }
+                            
+                            const { error } = await supabaseClient
+                                .from('listings')
+                                .update(listing)
+                                .eq('id', editId);
+                            
+                            if (error) throw error;
+                            showMessage('更新成功！');
+                        } else {
+                            // 新增
+                            const { error } = await supabaseClient
+                                .from('listings')
+                                .insert([listing]);
+                            
+                            if (error) throw error;
+                            showMessage('發布成功！');
+                        }
+                        
+                        await loadListings();
+                    } else {
+                        // 本地模式（demo）
+                        if (editId) {
+                            const index = allListings.findIndex(item => item.id === editId);
+                            if (index !== -1) {
+                                if (!password) {
+                                    listing.password_hash = allListings[index].password_hash;
+                                }
+                                allListings[index] = { ...allListings[index], ...listing };
+                            }
+                        } else {
+                            listing.id = Date.now().toString();
+                            listing.created_at = new Date().toISOString();
+                            allListings.unshift(listing);
+                        }
+                        displayListings();
+                        showMessage('操作成功！（本地模式）');
+                    }
+                    
+                    closeModal();
+                } catch (error) {
+                    console.error('提交錯誤:', error);
+                    alert('操作失敗，請稍後再試');
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = editId ? '更新需求' : '發布需求';
+                }
+            });
+            
+            // 點擊外部關閉 Modal
+            window.onclick = function(event) {
+                if (event.target.className === 'modal') {
+                    closeModal();
+                }
+            };
+        });
+    </script>
+</body>
+</html>

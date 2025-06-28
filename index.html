@@ -696,6 +696,51 @@ FOR ALL USING (true) WITH CHECK (true);</pre>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.js"></script>
     
     <script>
+        // 全域變數和函數
+        let allListings = [];
+        let currentFilter = 'all';
+        window.supabaseClient = null;
+
+        // 顯示/關閉 Modal（全域函數）
+        function showModal() {
+            document.getElementById('postModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('postModal').style.display = 'none';
+        }
+
+        // 點擊外部關閉 Modal
+        window.onclick = function(event) {
+            const modal = document.getElementById('postModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+
+        // 顯示聯絡資訊
+        function showContact(contact) {
+            alert(`聯絡方式：${contact}`);
+        }
+
+        // 篩選功能
+        function filterListings(filter) {
+            currentFilter = filter;
+            
+            // 更新按鈕狀態
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent.includes('全部') && filter === 'all') btn.classList.add('active');
+                else if (btn.textContent.includes('出租') && filter === 'offer') btn.classList.add('active');
+                else if (btn.textContent.includes('尋找') && filter === 'request') btn.classList.add('active');
+                else if (btn.textContent.includes('運動') && filter === 'sports') btn.classList.add('active');
+                else if (btn.textContent.includes('時尚') && filter === 'fashion') btn.classList.add('active');
+                else if (btn.textContent.includes('餐飲') && filter === 'food') btn.classList.add('active');
+            });
+            
+            displayListings();
+        }
+
         // 等待 SDK 載入完成
         window.addEventListener('DOMContentLoaded', function() {
             // 延遲初始化，確保所有資源載入完成
@@ -703,9 +748,6 @@ FOR ALL USING (true) WITH CHECK (true);</pre>
                 // Supabase 設定
                 const SUPABASE_URL = 'https://zocpqjlnckmnloalmeeo.supabase.co';
                 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvY3BxamxuY2ttbmxvYWxtZWVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMTk5OTEsImV4cCI6MjA2NjY5NTk5MX0.Mzh60p7mNpT1QBC3gBUNVx5N6XIQgoAC0MQ9kfLAcV8';
-                
-                // 初始化 Supabase
-                window.supabaseClient = null;
                 
                 // 檢查 Supabase 是否載入
                 if (typeof window.supabase !== 'undefined') {
@@ -719,10 +761,6 @@ FOR ALL USING (true) WITH CHECK (true);</pre>
                 initApp();
             }, 500);
         });
-
-        // 全域變數
-        let allListings = [];
-        let currentFilter = 'all';
 
         // 初始化應用程式
         function initApp() {

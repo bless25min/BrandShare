@@ -692,25 +692,65 @@ FOR ALL USING (true) WITH CHECK (true);</pre>
         </div>
     </div>
 
-    <!-- Supabase SDK -->
-    <script src="https://unpkg.com/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+    <!-- Supabase SDK - 使用完整的 CDN URL -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.js"></script>
     
     <script>
         // 等待 SDK 載入完成
-        window.addEventListener('load', function() {
-            // Supabase 設定
-            const SUPABASE_URL = 'https://zocpqjlnckmnloalmeeo.supabase.co';
-            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvY3BxamxuY2ttbmxvYWxtZWVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMTk5OTEsImV4cCI6MjA2NjY5NTk5MX0.Mzh60p7mNpT1QBC3gBUNVx5N6XIQgoAC0MQ9kfLAcV8';
-            
-            // 初始化 Supabase
-            let supabase = null;
-            if (window.supabase) {
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            }
+        window.addEventListener('DOMContentLoaded', function() {
+            // 延遲初始化，確保所有資源載入完成
+            setTimeout(function() {
+                // Supabase 設定
+                const SUPABASE_URL = 'https://zocpqjlnckmnloalmeeo.supabase.co';
+                const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvY3BxamxuY2ttbmxvYWxtZWVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMTk5OTEsImV4cCI6MjA2NjY5NTk5MX0.Mzh60p7mNpT1QBC3gBUNVx5N6XIQgoAC0MQ9kfLAcV8';
+                
+                // 初始化 Supabase
+                window.supabaseClient = null;
+                
+                // 檢查 Supabase 是否載入
+                if (typeof window.supabase !== 'undefined') {
+                    console.log('Supabase SDK 載入成功');
+                    window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                } else {
+                    console.warn('Supabase SDK 載入失敗，將顯示範例資料');
+                }
+                
+                // 啟動應用程式
+                initApp();
+            }, 500);
+        });
 
         // 全域變數
         let allListings = [];
         let currentFilter = 'all';
+
+        // 初始化應用程式
+        function initApp() {
+            console.log('初始化應用程式...');
+            
+            // 載入資料
+            loadListings();
+            
+            // 設定即時更新
+            if (window.supabaseClient) {
+                const channel = window.supabaseClient
+                    .channel('listings-changes')
+                    .on('postgres_changes', 
+                        { event: '*', schema: 'public', table: 'listings' }, 
+                        () => {
+                            console.log('收到即時更新');
+                            loadListings();
+                        }
+                    )
+                    .subscribe();
+            }
+            
+            // 設定表單事件
+            const form = document.getElementById('postForm');
+            if (form) {
+                form.addEventListener('submit', handleFormSubmit);
+            }
+        }
 
         // 顯示/關閉 Modal
         function showModal() {
@@ -809,6 +849,7 @@ FOR ALL USING (true) WITH CHECK (true);</pre>
         // 載入資料
         async function loadListings() {
             const grid = document.getElementById('listingsGrid');
+            const supabase = window.supabaseClient;
             
             console.log('開始載入資料...');
             console.log('Supabase 狀態:', supabase ? '已初始化' : '未初始化');
@@ -946,11 +987,12 @@ FOR ALL USING (true) WITH CHECK (true);</pre>
         }
 
         // 處理表單提交
-        document.getElementById('postForm').addEventListener('submit', async function(e) {
+        async function handleFormSubmit(e) {
             e.preventDefault();
             
             const formData = new FormData(this);
             const submitBtn = this.querySelector('.submit-btn');
+            const supabase = window.supabaseClient;
             
             submitBtn.textContent = '提交中...';
             submitBtn.disabled = true;
@@ -998,7 +1040,7 @@ FOR ALL USING (true) WITH CHECK (true);</pre>
                 submitBtn.textContent = '發布需求';
                 submitBtn.disabled = false;
             }
-        });
+        }
 
         // 顯示成功訊息
         function showSuccessMessage() {

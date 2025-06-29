@@ -312,6 +312,66 @@
             background: #da190b;
         }
 
+        /* Link Preview */
+        .link-preview {
+            margin: 1rem 0;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #f9f9f9;
+        }
+
+        .link-preview-header {
+            padding: 0.75rem;
+            background: #f0f0f0;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .link-preview-content {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            background: white;
+        }
+
+        .link-preview-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+        }
+
+        .link-preview-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #999;
+            font-size: 0.9rem;
+        }
+
+        .preview-link {
+            display: inline-block;
+            margin-top: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            background: #1877f2;
+            color: white;
+            text-decoration: none;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            transition: background 0.3s ease;
+        }
+
+        .preview-link:hover {
+            background: #166fe5;
+            color: white;
+        }
+
         /* Modal */
         .modal {
             display: none;
@@ -457,72 +517,8 @@
             line-height: 1.6;
         }
 
-        /* Link Preview */
-        .link-preview {
-            margin: 1rem 0;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            overflow: hidden;
-            background: #f9f9f9;
-        }
-
-        .link-preview-header {
-            padding: 0.75rem;
-            background: #f0f0f0;
-            border-bottom: 1px solid #e0e0e0;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.9rem;
-            color: #666;
-        }
-
-        .link-preview-content {
-            position: relative;
-            width: 100%;
-            height: 200px;
-            background: white;
-        }
-
-        .link-preview-iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            background: white;
-        }
-
-        .link-preview-placeholder {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            color: #999;
-            font-size: 0.9rem;
-        }
-
-        .link-preview-error {
-            padding: 1rem;
-            color: #f44336;
-            text-align: center;
-            font-size: 0.9rem;
-        }
-
-        .preview-link {
-            display: inline-block;
-            margin-top: 0.5rem;
-            padding: 0.25rem 0.75rem;
-            background: #1877f2;
-            color: white;
-            text-decoration: none;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            transition: background 0.3s ease;
-        }
-
-        .preview-link:hover {
-            background: #166fe5;
-            color: white;
-        }
+        /* Responsive */
+        @media (max-width: 768px) {
             .hero h1 {
                 font-size: 2rem;
             }
@@ -680,172 +676,70 @@
         let allListings = [];
         let currentFilter = 'all';
         
-        // 使用 Supabase RPC 驗證管理員密碼
-        async function verifyAdminPassword(password) {
-            if (!supabaseClient) return false;
-            
-            try {
-                const { data, error } = await supabaseClient.rpc('verify_admin_password', {
-                    input_password: password
-                });
-                
-                if (error) {
-                    console.error('管理員密碼驗證錯誤:', error);
-                    return false;
-                }
-                
-                return data === true;
-            } catch (error) {
-                console.error('密碼驗證錯誤:', error);
-                return false;
-            }
-        }
-        
-        // 使用 Supabase RPC 生成密碼雜湊
-        async function hashPassword(password) {
-            if (!supabaseClient) {
-                // 前端備用雜湊方法
-                const encoder = new TextEncoder();
-                const data = encoder.encode(password);
-                const hash = await crypto.subtle.digest('SHA-256', data);
-                return Array.from(new Uint8Array(hash))
-                    .map(b => b.toString(16).padStart(2, '0'))
-                    .join('');
-            }
-            
-            try {
-                const { data, error } = await supabaseClient.rpc('hash_password', {
-                    password: password
-                });
-                
-                if (error) throw error;
-                return data;
-            } catch (error) {
-                console.error('密碼雜湊錯誤:', error);
-                // 使用前端備用方法
-                const encoder = new TextEncoder();
-                const data = encoder.encode(password);
-                const hash = await crypto.subtle.digest('SHA-256', data);
-                return Array.from(new Uint8Array(hash))
-                    .map(b => b.toString(16).padStart(2, '0'))
-                    .join('');
-            }
-        }
-        
-        // 顯示/隱藏廣告連結欄位
-        function toggleAdLinkField() {
-            const typeSelect = document.querySelector('select[name="type"]');
-            const adLinkGroup = document.getElementById('adLinkGroup');
-            
-            if (typeSelect.value === 'offer') {
-                adLinkGroup.style.display = 'block';
-            } else {
-                adLinkGroup.style.display = 'none';
-                document.querySelector('input[name="ad_link"]').value = '';
-            }
-        }
-        
-        // 生成連結預覽
-        function generateLinkPreview(url) {
-            if (!url) return '';
-            
-            // 嘗試提取 Facebook 貼文 ID 或其他平台資訊
-            let embedCode = '';
-            
-            if (url.includes('facebook.com') || url.includes('fb.com')) {
-                // Facebook 嵌入（使用 oEmbed API 或簡單顯示）
-                embedCode = `
-                    <div class="link-preview">
-                        <div class="link-preview-header">
-                            📘 Facebook 廣告預覽
-                        </div>
-                        <div class="link-preview-content">
-                            <div class="link-preview-placeholder">
-                                <div>
-                                    <div>🎯 Facebook 廣告內容</div>
-                                    <a href="${url}" target="_blank" class="preview-link">查看完整廣告</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            } else if (url.includes('instagram.com')) {
-                // Instagram 嵌入
-                embedCode = `
-                    <div class="link-preview">
-                        <div class="link-preview-header">
-                            📷 Instagram 廣告預覽
-                        </div>
-                        <div class="link-preview-content">
-                            <div class="link-preview-placeholder">
-                                <div>
-                                    <div>📸 Instagram 廣告內容</div>
-                                    <a href="${url}" target="_blank" class="preview-link">查看完整廣告</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            } else if (url.includes('youtube.com') || url.includes('youtu.be')) {
-                // YouTube 嵌入
-                let videoId = '';
-                if (url.includes('youtu.be/')) {
-                    videoId = url.split('youtu.be/')[1].split('?')[0];
-                } else if (url.includes('watch?v=')) {
-                    videoId = url.split('watch?v=')[1].split('&')[0];
-                }
-                
-                if (videoId) {
-                    embedCode = `
-                        <div class="link-preview">
-                            <div class="link-preview-header">
-                                🎥 YouTube 廣告預覽
-                            </div>
-                            <div class="link-preview-content">
-                                <iframe class="link-preview-iframe" 
-                                        src="https://www.youtube.com/embed/${videoId}" 
-                                        frameborder="0" 
-                                        allowfullscreen>
-                                </iframe>
-                            </div>
-                        </div>
-                    `;
-                }
-            } else {
-                // 一般連結預覽
-                embedCode = `
-                    <div class="link-preview">
-                        <div class="link-preview-header">
-                            🔗 廣告連結預覽
-                        </div>
-                        <div class="link-preview-content">
-                            <div class="link-preview-placeholder">
-                                <div>
-                                    <div>🎯 廣告內容預覽</div>
-                                    <a href="${url}" target="_blank" class="preview-link">查看完整廣告</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            return embedCode;
-        }
+        // Modal 控制函數
+        function showModal() {
             document.getElementById('postModal').style.display = 'block';
+            toggleAdLinkField();
         }
         
         function closeModal() {
             document.getElementById('postModal').style.display = 'none';
-            // 重置表單
             document.getElementById('postForm').reset();
             delete document.getElementById('postForm').dataset.editId;
             document.querySelector('.submit-btn').textContent = '發布需求';
+            document.getElementById('adLinkGroup').style.display = 'none';
+        }
+        
+        // 廣告連結欄位控制
+        function toggleAdLinkField() {
+            const typeSelect = document.querySelector('select[name="type"]');
+            const adLinkGroup = document.getElementById('adLinkGroup');
+            
+            if (typeSelect && adLinkGroup) {
+                if (typeSelect.value === 'offer') {
+                    adLinkGroup.style.display = 'block';
+                } else {
+                    adLinkGroup.style.display = 'none';
+                    const adLinkInput = document.querySelector('input[name="ad_link"]');
+                    if (adLinkInput) adLinkInput.value = '';
+                }
+            }
         }
         
         // 顯示聯絡資訊
         function showContact(contact) {
             alert('聯絡方式：' + contact);
+        }
+        
+        // 篩選列表
+        function filterListings(filter) {
+            currentFilter = filter;
+            
+            // 更新按鈕狀態
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // 找到對應按鈕並設為 active
+            const filterMap = {
+                'all': '全部',
+                'offer': '出租版位',
+                'request': '尋找版位',
+                'sports': '運動健身',
+                'fashion': '時尚服飾',
+                'food': '餐飲美食'
+            };
+            
+            const targetText = filterMap[filter];
+            const targetBtn = Array.from(document.querySelectorAll('.filter-btn')).find(btn => 
+                btn.textContent.trim() === targetText
+            );
+            
+            if (targetBtn) {
+                targetBtn.classList.add('active');
+            }
+            
+            displayListings();
         }
         
         // 編輯項目
@@ -860,11 +754,9 @@
             if (!password) return;
             
             try {
-                // 驗證密碼
                 let isAuthorized = false;
                 
                 if (supabaseClient) {
-                    // 檢查是否為管理員
                     const { data: isAdmin } = await supabaseClient.rpc('verify_admin_password', {
                         input_password: password
                     });
@@ -872,7 +764,6 @@
                     if (isAdmin) {
                         isAuthorized = true;
                     } else {
-                        // 檢查是否為項目密碼
                         const { data: userHash } = await supabaseClient.rpc('hash_password', {
                             password: password
                         });
@@ -882,16 +773,11 @@
                         }
                     }
                 } else {
-                    // 本地模式的密碼驗證
                     if (listing.password_hash) {
                         const inputHash = await hashPassword(password);
                         isAuthorized = inputHash === listing.password_hash;
                     } else if (listing.password) {
                         isAuthorized = password === listing.password;
-                    }
-                    
-                    if (!isAuthorized) {
-                        isAuthorized = await verifyAdminPassword(password);
                     }
                 }
                 
@@ -906,10 +792,12 @@
                 document.querySelector('select[name="category"]').value = listing.category;
                 document.querySelector('textarea[name="description"]').value = listing.description;
                 document.querySelector('input[name="contact"]').value = listing.contact;
+                document.querySelector('input[name="ad_link"]').value = listing.ad_link || '';
                 document.querySelector('input[name="password"]').value = '';
                 document.querySelector('input[name="password"]').placeholder = '留空則保持原密碼';
                 
-                // 設定編輯模式
+                toggleAdLinkField();
+                
                 document.getElementById('postForm').dataset.editId = id;
                 document.querySelector('.submit-btn').textContent = '更新需求';
                 
@@ -936,11 +824,9 @@
             }
             
             try {
-                // 驗證密碼
                 let isAuthorized = false;
                 
                 if (supabaseClient) {
-                    // 檢查是否為管理員
                     const { data: isAdmin } = await supabaseClient.rpc('verify_admin_password', {
                         input_password: password
                     });
@@ -948,7 +834,6 @@
                     if (isAdmin) {
                         isAuthorized = true;
                     } else {
-                        // 檢查是否為項目密碼
                         const { data: userHash } = await supabaseClient.rpc('hash_password', {
                             password: password
                         });
@@ -977,16 +862,11 @@
                     showMessage('刪除成功！');
                     await loadListings();
                 } else {
-                    // 本地模式的密碼驗證
                     if (listing.password_hash) {
                         const inputHash = await hashPassword(password);
                         isAuthorized = inputHash === listing.password_hash;
                     } else if (listing.password) {
                         isAuthorized = password === listing.password;
-                    }
-                    
-                    if (!isAuthorized) {
-                        isAuthorized = await verifyAdminPassword(password);
                     }
                     
                     if (!isAuthorized) {
@@ -1004,17 +884,97 @@
             }
         }
         
-        // 篩選列表
-        function filterListings(filter) {
-            currentFilter = filter;
+        // 密碼雜湊函數
+        async function hashPassword(password) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password);
+            const hash = await crypto.subtle.digest('SHA-256', data);
+            return Array.from(new Uint8Array(hash))
+                .map(b => b.toString(16).padStart(2, '0'))
+                .join('');
+        }
+        
+        // 生成連結預覽
+        function generateLinkPreview(url) {
+            if (!url) return '';
             
-            // 更新按鈕狀態
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
+            let embedCode = '';
             
-            event.target.classList.add('active');
-            displayListings();
+            if (url.includes('facebook.com') || url.includes('fb.com')) {
+                embedCode = `
+                    <div class="link-preview">
+                        <div class="link-preview-header">
+                            📘 Facebook 廣告預覽
+                        </div>
+                        <div class="link-preview-content">
+                            <div class="link-preview-placeholder">
+                                <div>
+                                    <div>🎯 Facebook 廣告內容</div>
+                                    <a href="${url}" target="_blank" class="preview-link">查看完整廣告</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (url.includes('instagram.com')) {
+                embedCode = `
+                    <div class="link-preview">
+                        <div class="link-preview-header">
+                            📷 Instagram 廣告預覽
+                        </div>
+                        <div class="link-preview-content">
+                            <div class="link-preview-placeholder">
+                                <div>
+                                    <div>📸 Instagram 廣告內容</div>
+                                    <a href="${url}" target="_blank" class="preview-link">查看完整廣告</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (url.includes('youtube.com') || url.includes('youtu.be')) {
+                let videoId = '';
+                if (url.includes('youtu.be/')) {
+                    videoId = url.split('youtu.be/')[1].split('?')[0];
+                } else if (url.includes('watch?v=')) {
+                    videoId = url.split('watch?v=')[1].split('&')[0];
+                }
+                
+                if (videoId) {
+                    embedCode = `
+                        <div class="link-preview">
+                            <div class="link-preview-header">
+                                🎥 YouTube 廣告預覽
+                            </div>
+                            <div class="link-preview-content">
+                                <iframe class="link-preview-iframe" 
+                                        src="https://www.youtube.com/embed/${videoId}" 
+                                        frameborder="0" 
+                                        allowfullscreen>
+                                </iframe>
+                            </div>
+                        </div>
+                    `;
+                }
+            } else {
+                embedCode = `
+                    <div class="link-preview">
+                        <div class="link-preview-header">
+                            🔗 廣告連結預覽
+                        </div>
+                        <div class="link-preview-content">
+                            <div class="link-preview-placeholder">
+                                <div>
+                                    <div>🎯 廣告內容預覽</div>
+                                    <a href="${url}" target="_blank" class="preview-link">查看完整廣告</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            return embedCode;
         }
         
         // 建立列表卡片
@@ -1022,6 +982,9 @@
             const typeClass = data.type === 'offer' ? 'type-offer' : 'type-request';
             const typeText = data.type === 'offer' ? '提供版位' : '尋找版位';
             const initial = data.brand.charAt(0).toUpperCase();
+            
+            const adPreview = data.type === 'offer' && data.ad_link ? 
+                generateLinkPreview(data.ad_link) : '';
             
             return `
                 <div class="listing-card" data-type="${data.type}" data-category="${data.category}">
@@ -1036,10 +999,12 @@
                     <div class="listing-content">
                         <h4>${typeText}</h4>
                         <p>${data.description}</p>
+                        ${adPreview}
                     </div>
                     <div class="listing-tags">
                         <span class="tag">${data.category}</span>
                         ${isNewListing(data.created_at) ? '<span class="tag">新發布</span>' : ''}
+                        ${data.ad_link ? '<span class="tag">含廣告預覽</span>' : ''}
                     </div>
                     <div class="listing-footer">
                         <button class="contact-btn" onclick="showContact('${data.contact}')">聯繫合作</button>
@@ -1155,7 +1120,8 @@
                     category: '運動健身',
                     description: '我們最新的拳擊課程廣告獲得高度關注，日觸及超過 50,000 人。',
                     contact: 'marketing@fitlife.com',
-                    password_hash: 'demo_hash' // 應該是實際的雜湊值
+                    ad_link: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                    password_hash: 'demo_hash'
                 },
                 {
                     id: '2',
@@ -1165,7 +1131,7 @@
                     category: '運動健身',
                     description: '尋找健身房廣告版位，預算充足，長期合作優先。',
                     contact: 'contact@powerglove.tw',
-                    password_hash: 'demo_hash' // 應該是實際的雜湊值
+                    password_hash: 'demo_hash'
                 }
             ];
             displayListings();
@@ -1173,6 +1139,8 @@
         
         // 初始化
         window.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing...');
+            
             // 初始化 Supabase
             if (window.supabase) {
                 supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -1182,95 +1150,105 @@
             // 載入資料
             loadListings();
             
+            // 設定事件監聽
+            const typeSelect = document.querySelector('select[name="type"]');
+            if (typeSelect) {
+                typeSelect.addEventListener('change', toggleAdLinkField);
+            }
+            
             // 設定表單提交
-            document.getElementById('postForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                const formData = new FormData(this);
-                const submitBtn = this.querySelector('.submit-btn');
-                const editId = this.dataset.editId;
-                
-                submitBtn.disabled = true;
-                submitBtn.textContent = '提交中...';
-                
-                const listing = {
-                    type: formData.get('type'),
-                    brand: formData.get('brand'),
-                    category: formData.get('category'),
-                    description: formData.get('description'),
-                    contact: formData.get('contact')
-                };
-                
-                // 如果有設定新密碼，進行雜湊處理
-                const password = formData.get('password');
-                if (password) {
-                    if (supabaseClient) {
-                        const { data: hashedPassword } = await supabaseClient.rpc('hash_password', {
-                            password: password
-                        });
-                        listing.password_hash = hashedPassword;
-                    } else {
-                        listing.password_hash = await hashPassword(password);
-                    }
-                }
-                
-                try {
-                    if (supabaseClient) {
-                        if (editId) {
-                            // 如果沒有新密碼，保持原密碼雜湊
-                            if (!password) {
-                                const oldListing = allListings.find(item => item.id === editId);
-                                if (oldListing.password_hash) {
-                                    listing.password_hash = oldListing.password_hash;
-                                }
-                            }
-                            
-                            const { error } = await supabaseClient
-                                .from('listings')
-                                .update(listing)
-                                .eq('id', editId);
-                            
-                            if (error) throw error;
-                            showMessage('更新成功！');
-                        } else {
-                            // 新增
-                            const { error } = await supabaseClient
-                                .from('listings')
-                                .insert([listing]);
-                            
-                            if (error) throw error;
-                            showMessage('發布成功！');
-                        }
-                        
-                        await loadListings();
-                    } else {
-                        // 本地模式（demo）
-                        if (editId) {
-                            const index = allListings.findIndex(item => item.id === editId);
-                            if (index !== -1) {
-                                if (!password) {
-                                    listing.password_hash = allListings[index].password_hash;
-                                }
-                                allListings[index] = { ...allListings[index], ...listing };
+            const postForm = document.getElementById('postForm');
+            if (postForm) {
+                postForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const formData = new FormData(this);
+                    const submitBtn = this.querySelector('.submit-btn');
+                    const editId = this.dataset.editId;
+                    
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = '提交中...';
+                    
+                    const listing = {
+                        type: formData.get('type'),
+                        brand: formData.get('brand'),
+                        category: formData.get('category'),
+                        description: formData.get('description'),
+                        contact: formData.get('contact'),
+                        ad_link: formData.get('ad_link') || null
+                    };
+                    
+                    const password = formData.get('password');
+                    if (password) {
+                        if (supabaseClient) {
+                            try {
+                                const { data: hashedPassword } = await supabaseClient.rpc('hash_password', {
+                                    password: password
+                                });
+                                listing.password_hash = hashedPassword;
+                            } catch (error) {
+                                listing.password_hash = await hashPassword(password);
                             }
                         } else {
-                            listing.id = Date.now().toString();
-                            listing.created_at = new Date().toISOString();
-                            allListings.unshift(listing);
+                            listing.password_hash = await hashPassword(password);
                         }
-                        displayListings();
-                        showMessage('操作成功！（本地模式）');
                     }
                     
-                    closeModal();
-                } catch (error) {
-                    console.error('提交錯誤:', error);
-                    alert('操作失敗，請稍後再試');
-                } finally {
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = editId ? '更新需求' : '發布需求';
-                }
-            });
+                    try {
+                        if (supabaseClient) {
+                            if (editId) {
+                                if (!password) {
+                                    const oldListing = allListings.find(item => item.id === editId);
+                                    if (oldListing && oldListing.password_hash) {
+                                        listing.password_hash = oldListing.password_hash;
+                                    }
+                                }
+                                
+                                const { error } = await supabaseClient
+                                    .from('listings')
+                                    .update(listing)
+                                    .eq('id', editId);
+                                
+                                if (error) throw error;
+                                showMessage('更新成功！');
+                            } else {
+                                const { error } = await supabaseClient
+                                    .from('listings')
+                                    .insert([listing]);
+                                
+                                if (error) throw error;
+                                showMessage('發布成功！');
+                            }
+                            
+                            await loadListings();
+                        } else {
+                            if (editId) {
+                                const index = allListings.findIndex(item => item.id === editId);
+                                if (index !== -1) {
+                                    if (!password) {
+                                        listing.password_hash = allListings[index].password_hash;
+                                    }
+                                    allListings[index] = { ...allListings[index], ...listing };
+                                }
+                            } else {
+                                listing.id = Date.now().toString();
+                                listing.created_at = new Date().toISOString();
+                                allListings.unshift(listing);
+                            }
+                            displayListings();
+                            showMessage('操作成功！（本地模式）');
+                        }
+                        
+                        closeModal();
+                    } catch (error) {
+                        console.error('提交錯誤:', error);
+                        alert('操作失敗，請稍後再試');
+                    } finally {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = editId ? '更新需求' : '發布需求';
+                    }
+                });
+            }
             
             // 點擊外部關閉 Modal
             window.onclick = function(event) {

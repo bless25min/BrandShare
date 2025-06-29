@@ -457,8 +457,72 @@
             line-height: 1.6;
         }
 
-        /* Responsive */
-        @media (max-width: 768px) {
+        /* Link Preview */
+        .link-preview {
+            margin: 1rem 0;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #f9f9f9;
+        }
+
+        .link-preview-header {
+            padding: 0.75rem;
+            background: #f0f0f0;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .link-preview-content {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            background: white;
+        }
+
+        .link-preview-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+        }
+
+        .link-preview-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #999;
+            font-size: 0.9rem;
+        }
+
+        .link-preview-error {
+            padding: 1rem;
+            color: #f44336;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .preview-link {
+            display: inline-block;
+            margin-top: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            background: #1877f2;
+            color: white;
+            text-decoration: none;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            transition: background 0.3s ease;
+        }
+
+        .preview-link:hover {
+            background: #166fe5;
+            color: white;
+        }
             .hero h1 {
                 font-size: 2rem;
             }
@@ -580,6 +644,14 @@
                     <textarea name="description" placeholder="請詳細說明您的需求、目標受眾、預期效果等..." required></textarea>
                 </div>
                 
+                <div class="form-group" id="adLinkGroup" style="display: none;">
+                    <label>廣告連結 <small style="color: #666;">（提供版位時可選填，用於預覽廣告效果）</small></label>
+                    <input type="url" name="ad_link" placeholder="https://www.facebook.com/your-page/posts/123456789">
+                    <small style="color: #888; display: block; margin-top: 0.5rem;">
+                        支援 Facebook 貼文、Instagram 貼文、YouTube 影片等連結
+                    </small>
+                </div>
+                
                 <div class="form-group">
                     <label>聯絡方式</label>
                     <input type="text" name="contact" placeholder="Email 或電話" required>
@@ -660,8 +732,106 @@
             }
         }
         
-        // Modal 控制
-        function showModal() {
+        // 顯示/隱藏廣告連結欄位
+        function toggleAdLinkField() {
+            const typeSelect = document.querySelector('select[name="type"]');
+            const adLinkGroup = document.getElementById('adLinkGroup');
+            
+            if (typeSelect.value === 'offer') {
+                adLinkGroup.style.display = 'block';
+            } else {
+                adLinkGroup.style.display = 'none';
+                document.querySelector('input[name="ad_link"]').value = '';
+            }
+        }
+        
+        // 生成連結預覽
+        function generateLinkPreview(url) {
+            if (!url) return '';
+            
+            // 嘗試提取 Facebook 貼文 ID 或其他平台資訊
+            let embedCode = '';
+            
+            if (url.includes('facebook.com') || url.includes('fb.com')) {
+                // Facebook 嵌入（使用 oEmbed API 或簡單顯示）
+                embedCode = `
+                    <div class="link-preview">
+                        <div class="link-preview-header">
+                            📘 Facebook 廣告預覽
+                        </div>
+                        <div class="link-preview-content">
+                            <div class="link-preview-placeholder">
+                                <div>
+                                    <div>🎯 Facebook 廣告內容</div>
+                                    <a href="${url}" target="_blank" class="preview-link">查看完整廣告</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (url.includes('instagram.com')) {
+                // Instagram 嵌入
+                embedCode = `
+                    <div class="link-preview">
+                        <div class="link-preview-header">
+                            📷 Instagram 廣告預覽
+                        </div>
+                        <div class="link-preview-content">
+                            <div class="link-preview-placeholder">
+                                <div>
+                                    <div>📸 Instagram 廣告內容</div>
+                                    <a href="${url}" target="_blank" class="preview-link">查看完整廣告</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (url.includes('youtube.com') || url.includes('youtu.be')) {
+                // YouTube 嵌入
+                let videoId = '';
+                if (url.includes('youtu.be/')) {
+                    videoId = url.split('youtu.be/')[1].split('?')[0];
+                } else if (url.includes('watch?v=')) {
+                    videoId = url.split('watch?v=')[1].split('&')[0];
+                }
+                
+                if (videoId) {
+                    embedCode = `
+                        <div class="link-preview">
+                            <div class="link-preview-header">
+                                🎥 YouTube 廣告預覽
+                            </div>
+                            <div class="link-preview-content">
+                                <iframe class="link-preview-iframe" 
+                                        src="https://www.youtube.com/embed/${videoId}" 
+                                        frameborder="0" 
+                                        allowfullscreen>
+                                </iframe>
+                            </div>
+                        </div>
+                    `;
+                }
+            } else {
+                // 一般連結預覽
+                embedCode = `
+                    <div class="link-preview">
+                        <div class="link-preview-header">
+                            🔗 廣告連結預覽
+                        </div>
+                        <div class="link-preview-content">
+                            <div class="link-preview-placeholder">
+                                <div>
+                                    <div>🎯 廣告內容預覽</div>
+                                    <a href="${url}" target="_blank" class="preview-link">查看完整廣告</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            return embedCode;
+        }
             document.getElementById('postModal').style.display = 'block';
         }
         
@@ -690,29 +860,29 @@
             if (!password) return;
             
             try {
-                // 設定密碼到 Supabase 會話中用於 RLS 驗證
+                // 驗證密碼
+                let isAuthorized = false;
+                
                 if (supabaseClient) {
-                    // 嘗試使用密碼更新記錄以驗證權限
-                    const { error: testError } = await supabaseClient.rpc('set_config', {
-                        setting_name: 'app.user_password',
-                        setting_value: password,
-                        is_local: true
+                    // 檢查是否為管理員
+                    const { data: isAdmin } = await supabaseClient.rpc('verify_admin_password', {
+                        input_password: password
                     });
                     
-                    // 測試是否有權限更新此記錄
-                    const { error: updateError } = await supabaseClient
-                        .from('listings')
-                        .update({ updated_at: new Date().toISOString() })
-                        .eq('id', id);
-                    
-                    if (updateError) {
-                        alert('密碼錯誤或無權限編輯此項目！');
-                        return;
+                    if (isAdmin) {
+                        isAuthorized = true;
+                    } else {
+                        // 檢查是否為項目密碼
+                        const { data: userHash } = await supabaseClient.rpc('hash_password', {
+                            password: password
+                        });
+                        
+                        if (listing.password_hash === userHash || listing.password === password) {
+                            isAuthorized = true;
+                        }
                     }
                 } else {
                     // 本地模式的密碼驗證
-                    let isAuthorized = false;
-                    
                     if (listing.password_hash) {
                         const inputHash = await hashPassword(password);
                         isAuthorized = inputHash === listing.password_hash;
@@ -723,11 +893,11 @@
                     if (!isAuthorized) {
                         isAuthorized = await verifyAdminPassword(password);
                     }
-                    
-                    if (!isAuthorized) {
-                        alert('密碼錯誤！');
-                        return;
-                    }
+                }
+                
+                if (!isAuthorized) {
+                    alert('密碼錯誤！');
+                    return;
                 }
                 
                 // 填入表單
@@ -741,7 +911,6 @@
                 
                 // 設定編輯模式
                 document.getElementById('postForm').dataset.editId = id;
-                document.getElementById('postForm').dataset.editPassword = password;
                 document.querySelector('.submit-btn').textContent = '更新需求';
                 
                 showModal();
@@ -767,13 +936,32 @@
             }
             
             try {
+                // 驗證密碼
+                let isAuthorized = false;
+                
                 if (supabaseClient) {
-                    // 設定密碼到 Supabase 會話中用於 RLS 驗證
-                    const { error: configError } = await supabaseClient.rpc('set_config', {
-                        setting_name: 'app.user_password',
-                        setting_value: password,
-                        is_local: true
+                    // 檢查是否為管理員
+                    const { data: isAdmin } = await supabaseClient.rpc('verify_admin_password', {
+                        input_password: password
                     });
+                    
+                    if (isAdmin) {
+                        isAuthorized = true;
+                    } else {
+                        // 檢查是否為項目密碼
+                        const { data: userHash } = await supabaseClient.rpc('hash_password', {
+                            password: password
+                        });
+                        
+                        if (listing.password_hash === userHash || listing.password === password) {
+                            isAuthorized = true;
+                        }
+                    }
+                    
+                    if (!isAuthorized) {
+                        alert('密碼錯誤或無權限刪除此項目！');
+                        return;
+                    }
                     
                     const { error } = await supabaseClient
                         .from('listings')
@@ -782,7 +970,7 @@
                     
                     if (error) {
                         console.error('刪除錯誤:', error);
-                        alert('密碼錯誤或無權限刪除此項目！');
+                        alert('刪除失敗！');
                         return;
                     }
                     
@@ -790,8 +978,6 @@
                     await loadListings();
                 } else {
                     // 本地模式的密碼驗證
-                    let isAuthorized = false;
-                    
                     if (listing.password_hash) {
                         const inputHash = await hashPassword(password);
                         isAuthorized = inputHash === listing.password_hash;
@@ -1003,7 +1189,6 @@
                 const formData = new FormData(this);
                 const submitBtn = this.querySelector('.submit-btn');
                 const editId = this.dataset.editId;
-                const editPassword = this.dataset.editPassword;
                 
                 submitBtn.disabled = true;
                 submitBtn.textContent = '提交中...';
@@ -1019,21 +1204,19 @@
                 // 如果有設定新密碼，進行雜湊處理
                 const password = formData.get('password');
                 if (password) {
-                    listing.password_hash = await hashPassword(password);
+                    if (supabaseClient) {
+                        const { data: hashedPassword } = await supabaseClient.rpc('hash_password', {
+                            password: password
+                        });
+                        listing.password_hash = hashedPassword;
+                    } else {
+                        listing.password_hash = await hashPassword(password);
+                    }
                 }
                 
                 try {
                     if (supabaseClient) {
                         if (editId) {
-                            // 設定編輯密碼到會話中
-                            if (editPassword) {
-                                await supabaseClient.rpc('set_config', {
-                                    setting_name: 'app.user_password',
-                                    setting_value: editPassword,
-                                    is_local: true
-                                });
-                            }
-                            
                             // 如果沒有新密碼，保持原密碼雜湊
                             if (!password) {
                                 const oldListing = allListings.find(item => item.id === editId);

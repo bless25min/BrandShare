@@ -898,25 +898,68 @@
         function generateLinkPreview(url) {
             if (!url) return '';
             
+            console.log('Generating preview for URL:', url); // Debug log
+            
             let embedCode = '';
             
             if (url.includes('facebook.com') || url.includes('fb.com')) {
-                embedCode = `
-                    <div class="link-preview">
-                        <div class="link-preview-header">
-                            📘 Facebook 廣告預覽
-                        </div>
-                        <div class="link-preview-content">
-                            <div class="link-preview-placeholder">
-                                <div>
-                                    <div>🎯 Facebook 廣告內容</div>
+                // Facebook 嵌入 - 提取貼文ID並嵌入
+                let postId = '';
+                
+                // 嘗試提取貼文ID
+                const fbUrlPattern = /facebook\.com\/(.+?)\/posts\/([0-9]+)/;
+                const match = url.match(fbUrlPattern);
+                
+                if (match) {
+                    const pageName = match[1];
+                    postId = match[2];
+                    
+                    embedCode = `
+                        <div class="link-preview">
+                            <div class="link-preview-header">
+                                📘 Facebook 廣告預覽
+                            </div>
+                            <div class="link-preview-content">
+                                <div class="fb-post" 
+                                     data-href="${url}" 
+                                     data-width="350" 
+                                     data-show-text="true">
+                                    <blockquote cite="${url}" class="fb-xfbml-parse-ignore">
+                                        <div style="padding: 1rem; text-align: center; color: #666;">
+                                            <div style="margin-bottom: 0.5rem;">🎯 Facebook 廣告內容</div>
+                                            <div style="font-size: 0.9rem;">點擊下方連結查看完整廣告</div>
+                                        </div>
+                                    </blockquote>
+                                </div>
+                                <div style="text-align: center; padding: 0.5rem;">
                                     <a href="${url}" target="_blank" class="preview-link">查看完整廣告</a>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                `;
+                    `;
+                } else {
+                    // 如果無法解析，顯示基本預覽
+                    embedCode = `
+                        <div class="link-preview">
+                            <div class="link-preview-header">
+                                📘 Facebook 廣告預覽
+                            </div>
+                            <div class="link-preview-content">
+                                <div class="link-preview-placeholder">
+                                    <div>
+                                        <div style="margin-bottom: 1rem;">🎯 Facebook 廣告內容</div>
+                                        <div style="font-size: 0.9rem; color: #888; margin-bottom: 1rem;">
+                                            由於跨域限制，無法直接預覽 Facebook 內容
+                                        </div>
+                                        <a href="${url}" target="_blank" class="preview-link">查看完整廣告</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
             } else if (url.includes('instagram.com')) {
+                // Instagram 嵌入
                 embedCode = `
                     <div class="link-preview">
                         <div class="link-preview-header">
@@ -925,7 +968,10 @@
                         <div class="link-preview-content">
                             <div class="link-preview-placeholder">
                                 <div>
-                                    <div>📸 Instagram 廣告內容</div>
+                                    <div style="margin-bottom: 1rem;">📸 Instagram 廣告內容</div>
+                                    <div style="font-size: 0.9rem; color: #888; margin-bottom: 1rem;">
+                                        由於跨域限制，無法直接預覽 Instagram 內容
+                                    </div>
                                     <a href="${url}" target="_blank" class="preview-link">查看完整廣告</a>
                                 </div>
                             </div>
@@ -933,14 +979,25 @@
                     </div>
                 `;
             } else if (url.includes('youtube.com') || url.includes('youtu.be')) {
+                // YouTube 嵌入 - 改進版本
                 let videoId = '';
+                
+                console.log('Processing YouTube URL:', url); // Debug log
+                
+                // 更強健的 YouTube ID 提取
                 if (url.includes('youtu.be/')) {
-                    videoId = url.split('youtu.be/')[1].split('?')[0];
-                } else if (url.includes('watch?v=')) {
+                    videoId = url.split('youtu.be/')[1].split('?')[0].split('&')[0];
+                } else if (url.includes('youtube.com/watch?v=')) {
                     videoId = url.split('watch?v=')[1].split('&')[0];
+                } else if (url.includes('youtube.com/embed/')) {
+                    videoId = url.split('embed/')[1].split('?')[0];
+                } else if (url.includes('youtube.com/v/')) {
+                    videoId = url.split('v/')[1].split('?')[0];
                 }
                 
-                if (videoId) {
+                console.log('Extracted video ID:', videoId); // Debug log
+                
+                if (videoId && videoId.length === 11) { // YouTube video IDs are 11 characters
                     embedCode = `
                         <div class="link-preview">
                             <div class="link-preview-header">
@@ -948,15 +1005,43 @@
                             </div>
                             <div class="link-preview-content">
                                 <iframe class="link-preview-iframe" 
-                                        src="https://www.youtube.com/embed/${videoId}" 
+                                        src="https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1" 
+                                        title="YouTube video player"
                                         frameborder="0" 
-                                        allowfullscreen>
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                        allowfullscreen
+                                        loading="lazy"
+                                        style="border: none; border-radius: 8px;">
                                 </iframe>
+                                <div style="text-align: center; padding: 0.5rem; font-size: 0.9rem; color: #666;">
+                                    <a href="${url}" target="_blank" class="preview-link">在 YouTube 上觀看</a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    console.log('Invalid or missing video ID'); // Debug log
+                    embedCode = `
+                        <div class="link-preview">
+                            <div class="link-preview-header">
+                                🎥 YouTube 廣告預覽
+                            </div>
+                            <div class="link-preview-content">
+                                <div class="link-preview-placeholder">
+                                    <div>
+                                        <div style="margin-bottom: 1rem;">⚠️ 無法解析 YouTube 影片</div>
+                                        <div style="font-size: 0.9rem; color: #888; margin-bottom: 1rem;">
+                                            請確認連結格式正確
+                                        </div>
+                                        <a href="${url}" target="_blank" class="preview-link">查看原連結</a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     `;
                 }
             } else {
+                // 一般連結預覽
                 embedCode = `
                     <div class="link-preview">
                         <div class="link-preview-header">
@@ -965,7 +1050,10 @@
                         <div class="link-preview-content">
                             <div class="link-preview-placeholder">
                                 <div>
-                                    <div>🎯 廣告內容預覽</div>
+                                    <div style="margin-bottom: 1rem;">🎯 廣告內容預覽</div>
+                                    <div style="font-size: 0.9rem; color: #888; margin-bottom: 1rem;">
+                                        ${getDomainFromUrl(url)}
+                                    </div>
                                     <a href="${url}" target="_blank" class="preview-link">查看完整廣告</a>
                                 </div>
                             </div>
@@ -974,7 +1062,18 @@
                 `;
             }
             
+            console.log('Generated embed code:', embedCode.substring(0, 100) + '...'); // Debug log
             return embedCode;
+        }
+        
+        // 從 URL 提取域名
+        function getDomainFromUrl(url) {
+            try {
+                const domain = new URL(url).hostname;
+                return domain.replace('www.', '');
+            } catch {
+                return '外部連結';
+            }
         }
         
         // 建立列表卡片
@@ -1120,11 +1219,22 @@
                     category: '運動健身',
                     description: '我們最新的拳擊課程廣告獲得高度關注，日觸及超過 50,000 人。',
                     contact: 'marketing@fitlife.com',
-                    ad_link: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                    ad_link: 'https://www.youtube.com/watch?v=jNQXAC9IVRw',
                     password_hash: 'demo_hash'
                 },
                 {
                     id: '2',
+                    created_at: new Date(Date.now() - 3 * 3600000).toISOString(),
+                    type: 'offer',
+                    brand: '眾躍智庫學院',
+                    category: '其他',
+                    description: '【外匯課程廣告-留言版位】歡迎營業員、考試機構、經紀商、電腦硬體置入',
+                    contact: 'info@jumpacademy.com',
+                    ad_link: 'https://www.facebook.com/jumpacademy/posts/123456789',
+                    password_hash: 'demo_hash'
+                },
+                {
+                    id: '3',
                     created_at: new Date(Date.now() - 5 * 3600000).toISOString(),
                     type: 'request',
                     brand: 'PowerGlove 運動手套',

@@ -903,21 +903,44 @@
             let embedCode = '';
             
             if (url.includes('facebook.com') || url.includes('fb.com')) {
-                // Facebook 嵌入 - 提取貼文ID並嵌入
-                let postId = '';
+                // Facebook 嵌入 - 處理不同類型的 FB 連結
+                let linkType = 'post';
+                let displayText = 'Facebook 廣告內容';
+                let additionalInfo = '';
                 
-                // 嘗試提取貼文ID
+                // 判斷連結類型
+                if (url.includes('/ads/library/')) {
+                    linkType = 'ads_library';
+                    displayText = 'Facebook 廣告資料庫';
+                    additionalInfo = '來自 Facebook 官方廣告透明度資料庫';
+                } else if (url.includes('/posts/')) {
+                    linkType = 'post';
+                    displayText = 'Facebook 貼文';
+                    additionalInfo = '來自 Facebook 粉絲專頁貼文';
+                } else if (url.includes('/videos/')) {
+                    linkType = 'video';
+                    displayText = 'Facebook 影片';
+                    additionalInfo = '來自 Facebook 影片內容';
+                } else {
+                    linkType = 'page';
+                    displayText = 'Facebook 頁面';
+                    additionalInfo = '來自 Facebook 粉絲專頁';
+                }
+                
+                console.log('Facebook link type:', linkType, 'URL:', url); // Debug log
+                
+                // 嘗試提取貼文ID（僅對一般貼文有效）
                 const fbUrlPattern = /facebook\.com\/(.+?)\/posts\/([0-9]+)/;
                 const match = url.match(fbUrlPattern);
                 
-                if (match) {
+                if (match && linkType === 'post') {
                     const pageName = match[1];
-                    postId = match[2];
+                    const postId = match[2];
                     
                     embedCode = `
                         <div class="link-preview">
                             <div class="link-preview-header">
-                                📘 Facebook 廣告預覽
+                                📘 Facebook 貼文預覽
                             </div>
                             <div class="link-preview-content">
                                 <div class="fb-post" 
@@ -926,8 +949,8 @@
                                      data-show-text="true">
                                     <blockquote cite="${url}" class="fb-xfbml-parse-ignore">
                                         <div style="padding: 1rem; text-align: center; color: #666;">
-                                            <div style="margin-bottom: 0.5rem;">🎯 Facebook 廣告內容</div>
-                                            <div style="font-size: 0.9rem;">點擊下方連結查看完整廣告</div>
+                                            <div style="margin-bottom: 0.5rem;">🎯 ${displayText}</div>
+                                            <div style="font-size: 0.9rem;">點擊下方連結查看完整內容</div>
                                         </div>
                                     </blockquote>
                                 </div>
@@ -938,20 +961,30 @@
                         </div>
                     `;
                 } else {
-                    // 如果無法解析，顯示基本預覽
+                    // 所有其他 Facebook 連結（包括廣告資料庫）
+                    const icon = linkType === 'ads_library' ? '🔍' : '📘';
+                    const warningText = linkType === 'ads_library' 
+                        ? '廣告資料庫頁面無法直接嵌入，需要開啟原始頁面瀏覽'
+                        : '由於跨域限制和隱私政策，無法直接預覽 Facebook 內容';
+                    
                     embedCode = `
                         <div class="link-preview">
                             <div class="link-preview-header">
-                                📘 Facebook 廣告預覽
+                                ${icon} ${displayText}預覽
                             </div>
                             <div class="link-preview-content">
                                 <div class="link-preview-placeholder">
                                     <div>
-                                        <div style="margin-bottom: 1rem;">🎯 Facebook 廣告內容</div>
-                                        <div style="font-size: 0.9rem; color: #888; margin-bottom: 1rem;">
-                                            由於跨域限制，無法直接預覽 Facebook 內容
+                                        <div style="margin-bottom: 1rem;">🎯 ${displayText}</div>
+                                        <div style="font-size: 0.9rem; color: #888; margin-bottom: 0.5rem;">
+                                            ${additionalInfo}
                                         </div>
-                                        <a href="${url}" target="_blank" class="preview-link">查看完整廣告</a>
+                                        <div style="font-size: 0.85rem; color: #666; margin-bottom: 1rem; font-style: italic;">
+                                            ${warningText}
+                                        </div>
+                                        <a href="${url}" target="_blank" class="preview-link">
+                                            ${linkType === 'ads_library' ? '開啟廣告資料庫' : '查看完整廣告'}
+                                        </a>
                                     </div>
                                 </div>
                             </div>
@@ -1239,7 +1272,7 @@
                     category: '其他',
                     description: '【外匯課程廣告-留言版位】歡迎營業員、考試機構、經紀商、電腦硬體置入',
                     contact: 'info@jumpacademy.com',
-                    ad_link: 'https://www.facebook.com/jumpacademy/posts/123456789',
+                    ad_link: 'https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=TW&search_type=page&view_all_page_id=105864701769057',
                     password_hash: 'demo_hash'
                 },
                 {

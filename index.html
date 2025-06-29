@@ -979,16 +979,19 @@
                     </div>
                 `;
             } else if (url.includes('youtube.com') || url.includes('youtu.be')) {
-                // YouTube 嵌入 - 改進版本
+                // YouTube 嵌入 - 改進版本，支援 Shorts
                 let videoId = '';
                 
                 console.log('Processing YouTube URL:', url); // Debug log
                 
-                // 更強健的 YouTube ID 提取
+                // 更強健的 YouTube ID 提取，包含 Shorts 支援
                 if (url.includes('youtu.be/')) {
                     videoId = url.split('youtu.be/')[1].split('?')[0].split('&')[0];
                 } else if (url.includes('youtube.com/watch?v=')) {
                     videoId = url.split('watch?v=')[1].split('&')[0];
+                } else if (url.includes('youtube.com/shorts/')) {
+                    // 支援 YouTube Shorts
+                    videoId = url.split('shorts/')[1].split('?')[0].split('&')[0];
                 } else if (url.includes('youtube.com/embed/')) {
                     videoId = url.split('embed/')[1].split('?')[0];
                 } else if (url.includes('youtube.com/v/')) {
@@ -998,20 +1001,26 @@
                 console.log('Extracted video ID:', videoId); // Debug log
                 
                 if (videoId && videoId.length === 11) { // YouTube video IDs are 11 characters
+                    // 檢查是否為 Shorts
+                    const isShorts = url.includes('/shorts/');
+                    const embedUrl = isShorts 
+                        ? `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&autoplay=0`
+                        : `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`;
+                    
                     embedCode = `
                         <div class="link-preview">
                             <div class="link-preview-header">
-                                🎥 YouTube 廣告預覽
+                                🎥 YouTube ${isShorts ? 'Shorts' : '影片'} 預覽
                             </div>
                             <div class="link-preview-content">
                                 <iframe class="link-preview-iframe" 
-                                        src="https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1" 
+                                        src="${embedUrl}" 
                                         title="YouTube video player"
                                         frameborder="0" 
-                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
                                         allowfullscreen
                                         loading="lazy"
-                                        style="border: none; border-radius: 8px;">
+                                        style="border: none; border-radius: 8px; background: #000;">
                                 </iframe>
                                 <div style="text-align: center; padding: 0.5rem; font-size: 0.9rem; color: #666;">
                                     <a href="${url}" target="_blank" class="preview-link">在 YouTube 上觀看</a>
@@ -1020,7 +1029,7 @@
                         </div>
                     `;
                 } else {
-                    console.log('Invalid or missing video ID'); // Debug log
+                    console.log('Invalid or missing video ID, got:', videoId); // Debug log
                     embedCode = `
                         <div class="link-preview">
                             <div class="link-preview-header">
@@ -1031,7 +1040,7 @@
                                     <div>
                                         <div style="margin-bottom: 1rem;">⚠️ 無法解析 YouTube 影片</div>
                                         <div style="font-size: 0.9rem; color: #888; margin-bottom: 1rem;">
-                                            請確認連結格式正確
+                                            影片ID: "${videoId}" (長度: ${videoId ? videoId.length : 0})
                                         </div>
                                         <a href="${url}" target="_blank" class="preview-link">查看原連結</a>
                                     </div>
@@ -1219,7 +1228,7 @@
                     category: '運動健身',
                     description: '我們最新的拳擊課程廣告獲得高度關注，日觸及超過 50,000 人。',
                     contact: 'marketing@fitlife.com',
-                    ad_link: 'https://www.youtube.com/watch?v=jNQXAC9IVRw',
+                    ad_link: 'https://www.youtube.com/shorts/mmX0BCjQ6S0',
                     password_hash: 'demo_hash'
                 },
                 {

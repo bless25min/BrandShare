@@ -900,15 +900,40 @@
             
             if (supabaseClient) {
                 try {
+                    // 只載入公開留言，私人留言需要特殊權限
                     const { data, error } = await supabaseClient
                         .from('comments')
                         .select('*')
                         .eq('listing_id', listingId)
+                        .eq('is_private', false)  // 只顯示公開留言
                         .order('created_at', { ascending: true });
                     
                     if (error) throw error;
                     
-                    displayComments(data || [], listingId);
+                    // 檢查是否為列表發布者，如果是則載入私人留言
+                    const listing = allListings.find(item => item.id === listingId);
+                    let privateComments = [];
+                    
+                    // 這裡可以添加驗證邏輯，例如詢問密碼
+                    const isOwner = await checkListingOwnership(listingId);
+                    
+                    if (isOwner) {
+                        const { data: privateData, error: privateError } = await supabaseClient
+                            .from('comments')
+                            .select('*')
+                            .eq('listing_id', listingId)
+                            .eq('is_private', true)
+                            .order('created_at', { ascending: true });
+                        
+                        if (!privateError) {
+                            privateComments = privateData || [];
+                        }
+                    }
+                    
+                    const allComments = [...(data || []), ...privateComments]
+                        .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+                    
+                    displayComments(allComments, listingId, isOwner);
                 } catch (error) {
                     console.error('載入留言錯誤:', error);
                     commentsList.innerHTML = '<div style="text-align: center; color: #666;">載入留言失敗</div>';
@@ -928,17 +953,68 @@
                         id: '2',
                         listing_id: listingId,
                         author_name: '品牌經理',
-                        content: '已私訊詳細討論，歡迎長期合作！',
+                        content: '已私訊詳細討論，歡迎長期合作！（註：這是範例私人留言，實際上只有發布者可見）',
                         is_private: true,
                         created_at: new Date(Date.now() - 1 * 3600000).toISOString()
                     }
                 ];
-                displayComments(sampleComments, listingId);
+                
+                // 本地模式：只顯示公開留言
+                const publicComments = sampleComments.filter(comment => !comment.is_private);
+                displayComments(publicComments, listingId, false);
             }
         }
         
+        // 檢查列表擁有權
+        async function checkListingOwnership(listingId) {
+            // 這裡應該實作更安全的驗證邏輯
+            // 暫時返回 false，表示不是擁有者
+            // 實際應用中可以：
+            // 1. 要求輸入發布時的密碼
+            // 2. 使用 JWT token 驗證
+            // 3. 實作完整的用戶系統
+            
+            const listing = allListings.find(item => item.id === listingId);
+            if (!listing) return false;
+            
+            // 詢問密碼來驗證擁有權
+            const password = prompt('輸入此項目的管理密碼來查看私人留言（留空跳過）：');
+            if (!password) return false;
+            
+            try {
+                if (supabaseClient) {
+                    // 檢查是否為管理員
+                    const { data: isAdmin } = await supabaseClient.rpc('verify_admin_password', {
+                        input_password: password
+                    });
+                    
+                    if (isAdmin) return true;
+                    
+                    // 檢查是否為項目密碼
+                    const { data: userHash } = await supabaseClient.rpc('hash_password', {
+                        password: password
+                    });
+                    
+                    return listing.password_hash === userHash || listing.password === password;
+                } else {
+                    // 本地模式驗證
+                    if (listing.password_hash) {
+                        const inputHash = await hashPassword(password);
+                        return inputHash === listing.password_hash;
+                    } else if (listing.password) {
+                        return password === listing.password;
+                    }
+                }
+            } catch (error) {
+                console.error('驗證擁有權錯誤:', error);
+                return false;
+            }
+            
+            return false;
+        }
+        
         // 顯示留言
-        function displayComments(comments, listingId) {
+        function displayComments(comments, listingId, isOwner = false) {
             const commentsList = document.querySelector(`.comment-list[data-listing="${listingId}"]`);
             
             if (comments.length === 0) {
@@ -950,6 +1026,11 @@
                 const isPrivate = comment.is_private;
                 const privateClass = isPrivate ? ' private' : '';
                 const privateBadge = isPrivate ? '<span class="comment-private-badge">私人留言</span>' : '';
+                
+                // 如果是私人留言但用戶不是擁有者，則不顯示
+                if (isPrivate && !isOwner) {
+                    return '';
+                }
                 
                 return `
                     <div class="comment${privateClass}">
@@ -963,7 +1044,24 @@
                         <div class="comment-content">${comment.content}</div>
                     </div>
                 `;
-            }).join('');
+            }).filter(html => html !== '').join('');
+            
+            // 如果有私人留言但用戶未驗證，顯示提示
+            const hasPrivateComments = comments.some(c => c.is_private);
+            if (hasPrivateComments && !isOwner) {
+                const privateNotice = document.createElement('div');
+                privateNotice.className = 'comment';
+                privateNotice.style.cssText = 'background: #f8f9fa; border: 1px dashed #dee2e6; text-align: center; color: #6c757d; font-style: italic;';
+                privateNotice.innerHTML = `
+                    <div style="padding: 0.5rem;">
+                        🔒 此項目有私人留言，僅發布者可見
+                        <button onclick="loadComments('${listingId}')" style="margin-left: 0.5rem; padding: 0.25rem 0.5rem; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                            驗證查看
+                        </button>
+                    </div>
+                `;
+                commentsList.appendChild(privateNotice);
+            }
         }
         
         // 提交留言

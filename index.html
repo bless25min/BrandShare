@@ -956,7 +956,12 @@
                         .eq('listing_id', listingId)
                         .order('created_at', { ascending: true });
                     
-                    if (error) throw error;
+                    console.log('載入留言結果:', { data, error });
+                    
+                    if (error) {
+                        console.error('載入留言錯誤詳情:', error);
+                        throw error;
+                    }
                     
                     displayComments(data || [], listingId);
                 } catch (error) {
@@ -992,7 +997,8 @@
         
         // 檢查是否為同一個留言者
         function isSameCommenter(email) {
-            return userCommentIdentity && userCommentIdentity.email === email;
+            if (!email || !userCommentIdentity) return false;
+            return userCommentIdentity.email === email;
         }
         
         // 顯示留言
@@ -1055,6 +1061,8 @@
                                 <input type="text" id="reply-name-${comment.id}" placeholder="您的姓名" 
                                        style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
                                 <input type="email" id="reply-email-${comment.id}" placeholder="您的 Email（用於識別）" 
+                                       required
+                                       pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
                                        style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
                             </div>
                             <div class="reply-input-group">
@@ -1140,6 +1148,13 @@
                 return;
             }
             
+            // 驗證 Email 格式
+            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            if (!emailRegex.test(email)) {
+                alert('請輸入有效的 Email 地址');
+                return;
+            }
+            
             // 儲存用戶身份
             userCommentIdentity = { name, email };
             localStorage.setItem('userCommentIdentity', JSON.stringify(userCommentIdentity));
@@ -1150,16 +1165,26 @@
                 author_email: email,
                 content: content,
                 parent_comment_id: parentCommentId,
-                created_at: new Date().toISOString()
+                is_private: false // 確保包含此欄位
             };
+            
+            console.log('準備提交的回覆資料:', comment);
             
             try {
                 if (supabaseClient) {
-                    const { error } = await supabaseClient
+                    const { data, error } = await supabaseClient
                         .from('comments')
-                        .insert([comment]);
+                        .insert([comment])
+                        .select();
                     
-                    if (error) throw error;
+                    if (error) {
+                        console.error('Supabase 錯誤詳情:', error);
+                        throw error;
+                    }
+                    
+                    if (data) {
+                        console.log('成功插入回覆:', data);
+                    }
                     
                     showMessage('回覆發布成功！');
                 } else {
@@ -1175,7 +1200,20 @@
                 
             } catch (error) {
                 console.error('提交回覆錯誤:', error);
-                alert('回覆發布失敗，請稍後再試');
+                let errorMessage = '回覆發布失敗，請稍後再試';
+                
+                if (error.message) {
+                    console.error('錯誤詳情:', error.message);
+                    if (error.message.includes('author_email')) {
+                        errorMessage = 'Email 格式不正確，請檢查後重試';
+                    } else if (error.message.includes('content')) {
+                        errorMessage = '回覆內容不能為空';
+                    } else if (error.message.includes('null value')) {
+                        errorMessage = '請確保所有必填欄位都已填寫';
+                    }
+                }
+                
+                alert(errorMessage);
             }
         }
         
@@ -1189,6 +1227,13 @@
             
             if (!content || !authorName || !authorEmail) {
                 alert('請填寫所有欄位');
+                return;
+            }
+            
+            // 驗證 Email 格式
+            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            if (!emailRegex.test(authorEmail)) {
+                alert('請輸入有效的 Email 地址');
                 return;
             }
             
@@ -1206,16 +1251,26 @@
                 author_email: authorEmail,
                 content: content,
                 parent_comment_id: null,
-                created_at: new Date().toISOString()
+                is_private: false // 確保包含此欄位，即使已設為預設值
             };
+            
+            console.log('準備提交的留言資料:', comment);
             
             try {
                 if (supabaseClient) {
-                    const { error } = await supabaseClient
+                    const { data, error } = await supabaseClient
                         .from('comments')
-                        .insert([comment]);
+                        .insert([comment])
+                        .select();
                     
-                    if (error) throw error;
+                    if (error) {
+                        console.error('Supabase 錯誤詳情:', error);
+                        throw error;
+                    }
+                    
+                    if (data) {
+                        console.log('成功插入留言:', data);
+                    }
                     
                     showMessage('留言發布成功！');
                 } else {
@@ -1228,9 +1283,24 @@
                 // 重新載入留言
                 await loadComments(listingId);
                 
-            } catch (error) {
+                } catch (error) {
                 console.error('提交留言錯誤:', error);
-                alert('留言發布失敗，請稍後再試');
+                let errorMessage = '留言發布失敗，請稍後再試';
+                
+                if (error.message) {
+                    console.error('錯誤詳情:', error.message);
+                    if (error.message.includes('author_email')) {
+                        errorMessage = 'Email 格式不正確，請檢查後重試';
+                    } else if (error.message.includes('content')) {
+                        errorMessage = '留言內容不能為空';
+                    } else if (error.message.includes('listing_id')) {
+                        errorMessage = '無效的項目 ID';
+                    } else if (error.message.includes('null value')) {
+                        errorMessage = '請確保所有必填欄位都已填寫';
+                    }
+                }
+                
+                alert(errorMessage);
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.textContent = '發送';
@@ -1784,6 +1854,8 @@
                                            style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
                                     <input type="email" name="author_email" placeholder="您的 Email（用於識別）" 
                                            data-listing="${data.id}"
+                                           required
+                                           pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
                                            style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
                                 </div>
                                 <div class="comment-input-group">

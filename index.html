@@ -1612,26 +1612,12 @@
                                 <!-- 留言會動態載入到這裡 -->
                             </div>
                             
-                            <!-- 私人留言查看區域 -->
-                            <div class="private-comments-section" style="margin-top: 1rem; padding: 1rem; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; display: none;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                                    <h4 style="margin: 0; color: #495057;">🔒 私人留言區域</h4>
-                                    <button onclick="hidePrivateComments('${data.id}')" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;">✕</button>
-                                </div>
-                                <div class="private-comments-list" data-listing="${data.id}">
-                                    <!-- 私人留言會載入到這裡 -->
-                                </div>
-                            </div>
-                            
-                            <!-- 查看私人留言按鈕 -->
-                            <div class="view-private-section" style="margin-top: 1rem; text-align: center;">
-                                <button onclick="showPrivateCommentsDialog('${data.id}')" 
+                            <!-- 留言者查看自己私人留言的按鈕 -->
+                            <div style="text-align: center; margin-top: 1rem;">
+                                <button onclick="viewMyPrivateComments('${data.id}')" 
                                         style="background: #6c757d; color: white; border: none; padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; font-size: 0.9rem;">
-                                    🔍 查看私人留言
+                                    🔍 查看我的私人留言
                                 </button>
-                                <div style="font-size: 0.8rem; color: #6c757d; margin-top: 0.25rem;">
-                                    發布者可用發文密碼查看，留言者可用留言密碼查看自己的留言
-                                </div>
                             </div>
                         </div>
                     </div>

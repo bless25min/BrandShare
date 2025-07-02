@@ -545,8 +545,14 @@
         .comments-content {
             display: none;
             margin-top: 1rem;
-            max-height: 300px;
+            max-height: 350px;
             overflow-y: auto;
+        }
+        
+        .comment-list {
+            max-height: 200px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
         }
 
         .comments-content.active {
@@ -708,7 +714,37 @@
             display: block;
         }
 
-        @media (max-width: 768px) {
+        /* 查看我的留言按鈕 */
+        .view-my-comments-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        .view-my-comments-btn:hover {
+            background: #5a6268;
+            transform: translateY(-1px);
+        }
+        
+        /* 我的私人留言區域 */
+        .my-private-comments {
+            background: #e8f5e9;
+            border: 1px solid #4caf50;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 0.75rem 0;
+        }
+        
+        .my-private-comments-header {
+            font-weight: bold;
+            color: #2e7d32;
+            margin-bottom: 0.5rem;
+        }
             .hero h1 {
                 font-size: 2rem;
             }
@@ -1244,7 +1280,244 @@
             }
         }
         
-        // 篩選列表
+        // 查看我的私人留言
+        async function viewMyPrivateComments(listingId) {
+            const passwordInputArea = document.querySelector(`.my-comments-password-area[data-listing="${listingId}"]`);
+            
+            if (passwordInputArea && passwordInputArea.style.display === 'block') {
+                const passwordInput = passwordInputArea.querySelector('input');
+                const password = passwordInput.value.trim();
+                
+                if (!password) {
+                    alert('請輸入您的留言密碼');
+                    return;
+                }
+                
+                // 查找該用戶的私人留言
+                await loadMyPrivateComments(listingId, password);
+            } else {
+                // 創建密碼輸入區
+                const container = document.querySelector(`.my-comments-container[data-listing="${listingId}"]`);
+                if (!passwordInputArea) {
+                    const inputArea = document.createElement('div');
+                    inputArea.className = 'my-comments-password-area';
+                    inputArea.setAttribute('data-listing', listingId);
+                    inputArea.style.cssText = 'margin-bottom: 1rem;';
+                    inputArea.innerHTML = `
+                        <div style="display: flex; gap: 0.5rem;">
+                            <input type="password" placeholder="輸入您的私人留言密碼" 
+                                   style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;"
+                                   onkeypress="if(event.key==='Enter') viewMyPrivateComments('${listingId}')">
+                            <button onclick="viewMyPrivateComments('${listingId}')" 
+                                    style="padding: 0.5rem 1rem; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                確認
+                            </button>
+                        </div>
+                    `;
+                    container.insertBefore(inputArea, container.firstChild);
+                    inputArea.querySelector('input').focus();
+                } else {
+                    passwordInputArea.style.display = 'block';
+                    passwordInputArea.querySelector('input').focus();
+                }
+            }
+        }
+        
+        // 載入我的私人留言
+        async function loadMyPrivateComments(listingId, password) {
+            const container = document.querySelector(`.my-comments-container[data-listing="${listingId}"]`);
+            const passwordArea = container.querySelector('.my-comments-password-area');
+            
+            try {
+                let myComments = [];
+                
+                if (supabaseClient) {
+                    // 獲取所有私人留言
+                    const { data: allPrivateComments, error } = await supabaseClient
+                        .from('comments')
+                        .select('*')
+                        .eq('listing_id', listingId)
+                        .eq('is_private', true)
+                        .order('created_at', { ascending: false });
+                    
+                    if (error) throw error;
+                    
+                    // 驗證密碼並篩選屬於該用戶的留言
+                    const { data: hashedPassword } = await supabaseClient.rpc('hash_password', {
+                        password: password
+                    });
+                    
+                    myComments = (allPrivateComments || []).filter(comment => 
+                        comment.comment_password_hash === hashedPassword
+                    );
+                } else {
+                    // 本地模式
+                    if (window.localComments && window.localComments[listingId]) {
+                        const hashedPassword = await hashPassword(password);
+                        myComments = window.localComments[listingId].filter(comment => 
+                            comment.is_private && comment.comment_password_hash === hashedPassword
+                        );
+                    }
+                }
+                
+                if (myComments.length > 0) {
+                    // 隱藏密碼輸入區
+                    if (passwordArea) passwordArea.style.display = 'none';
+                    
+                    // 顯示用戶的私人留言
+                    let myCommentsHtml = `
+                        <div class="my-private-comments">
+                            <div class="my-private-comments-header">
+                                🔓 您的私人留言 (${myComments.length} 則)
+                            </div>
+                    `;
+                    
+                    myCommentsHtml += myComments.map(comment => `
+                        <div class="comment" style="background: #f1f8e9; margin-bottom: 0.5rem;">
+                            <div class="comment-header">
+                                <span class="comment-author">${comment.author_name}</span>
+                                <span class="comment-time">${formatDate(comment.created_at)}</span>
+                            </div>
+                            <div class="comment-content">${comment.content}</div>
+                        </div>
+                    `).join('');
+                    
+                    myCommentsHtml += `
+                            <div style="margin-top: 1rem; padding: 0.75rem; background: #e0f2f1; border-radius: 6px;">
+                                <div style="font-size: 0.9rem; color: #00695c; margin-bottom: 0.5rem;">
+                                    💬 新增後續留言：
+                                </div>
+                                <textarea placeholder="輸入後續留言..." 
+                                          style="width: 100%; padding: 0.5rem; border: 1px solid #4db6ac; border-radius: 4px; resize: none; min-height: 60px;"
+                                          id="follow-up-${listingId}"></textarea>
+                                <button onclick="submitFollowUp('${listingId}', '${password}')" 
+                                        style="margin-top: 0.5rem; padding: 0.5rem 1rem; background: #00897b; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                    發送後續留言
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // 顯示我的留言區域
+                    const existingMyComments = container.querySelector('.my-private-comments');
+                    if (existingMyComments) {
+                        existingMyComments.outerHTML = myCommentsHtml;
+                    } else {
+                        container.insertAdjacentHTML('beforeend', myCommentsHtml);
+                    }
+                    
+                    showMessage(`找到 ${myComments.length} 則您的私人留言`);
+                } else {
+                    alert('密碼錯誤或沒有找到您的私人留言');
+                    if (passwordArea) {
+                        passwordArea.querySelector('input').value = '';
+                        passwordArea.querySelector('input').focus();
+                    }
+                }
+            } catch (error) {
+                console.error('載入私人留言錯誤:', error);
+                alert('載入失敗，請稍後再試');
+            }
+        }
+        
+        // 提交後續留言
+        async function submitFollowUp(listingId, originalPassword) {
+            const textarea = document.getElementById(`follow-up-${listingId}`);
+            const content = textarea.value.trim();
+            
+            if (!content) {
+                alert('請輸入留言內容');
+                return;
+            }
+            
+            // 獲取原始留言者的姓名
+            let authorName = '後續留言';
+            
+            // 嘗試從已載入的留言中找到原始姓名
+            if (supabaseClient) {
+                try {
+                    const { data: hashedPassword } = await supabaseClient.rpc('hash_password', {
+                        password: originalPassword
+                    });
+                    
+                    const { data: myComments } = await supabaseClient
+                        .from('comments')
+                        .select('author_name')
+                        .eq('listing_id', listingId)
+                        .eq('comment_password_hash', hashedPassword)
+                        .limit(1);
+                    
+                    if (myComments && myComments.length > 0) {
+                        authorName = myComments[0].author_name + ' (後續)';
+                    }
+                } catch (error) {
+                    console.error('獲取原始姓名錯誤:', error);
+                }
+            } else {
+                // 本地模式
+                if (window.localComments && window.localComments[listingId]) {
+                    const hashedPassword = await hashPassword(originalPassword);
+                    const myComment = window.localComments[listingId].find(c => 
+                        c.comment_password_hash === hashedPassword
+                    );
+                    if (myComment) {
+                        authorName = myComment.author_name + ' (後續)';
+                    }
+                }
+            }
+            
+            const comment = {
+                id: Date.now().toString(),
+                listing_id: listingId,
+                author_name: authorName,
+                content: content,
+                is_private: true,
+                created_at: new Date().toISOString()
+            };
+            
+            // 使用原密碼的雜湊
+            if (supabaseClient) {
+                try {
+                    const { data: hashedPassword } = await supabaseClient.rpc('hash_password', {
+                        password: originalPassword
+                    });
+                    comment.comment_password_hash = hashedPassword;
+                } catch (error) {
+                    comment.comment_password_hash = await hashPassword(originalPassword);
+                }
+            } else {
+                comment.comment_password_hash = await hashPassword(originalPassword);
+            }
+            
+            try {
+                if (supabaseClient) {
+                    delete comment.id;
+                    const { error } = await supabaseClient
+                        .from('comments')
+                        .insert([comment]);
+                    
+                    if (error) throw error;
+                } else {
+                    // 本地模式
+                    if (!window.localComments[listingId]) {
+                        window.localComments[listingId] = [];
+                    }
+                    window.localComments[listingId].push(comment);
+                }
+                
+                showMessage('後續留言已發送！');
+                textarea.value = '';
+                
+                // 重新載入我的留言
+                await loadMyPrivateComments(listingId, originalPassword);
+                // 重新載入所有留言以更新計數
+                await loadComments(listingId);
+                
+            } catch (error) {
+                console.error('提交後續留言錯誤:', error);
+                alert('發送失敗，請稍後再試');
+            }
+        }
         function filterListings(filter) {
             currentFilter = filter;
             
@@ -1735,6 +2008,13 @@
                             <div class="comment-list" data-listing="${data.id}">
                                 <!-- 留言會動態載入到這裡 -->
                             </div>
+                            
+                            <!-- 我的私人留言區域 -->
+                            <div class="my-comments-container" data-listing="${data.id}" style="text-align: center; margin-top: 1rem;">
+                                <button onclick="viewMyPrivateComments('${data.id}')" class="view-my-comments-btn">
+                                    🔍 查看我的私人留言
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1868,6 +2148,30 @@
                     password_hash: 'demo_hash'
                 }
             ];
+            
+            // 初始化範例留言
+            window.localComments = {
+                '1': [
+                    {
+                        id: '1-1',
+                        listing_id: '1',
+                        author_name: '行銷小幫手',
+                        content: '這個廣告效果很不錯！我們也想要類似的合作機會。',
+                        is_private: false,
+                        created_at: new Date(Date.now() - 2 * 3600000).toISOString()
+                    },
+                    {
+                        id: '1-2',
+                        listing_id: '1',
+                        author_name: '品牌經理 A',
+                        content: '私訊詳談，我們有類似的健身產品想要合作。',
+                        is_private: true,
+                        comment_password_hash: 'ecd71870d1963316a97e3ac3408c9835ad8cf0f3c1bc703527c30265534f75ae', // test123 的 SHA-256
+                        created_at: new Date(Date.now() - 1 * 3600000).toISOString()
+                    }
+                ]
+            };
+            
             displayListings();
         }
         

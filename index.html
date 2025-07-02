@@ -1020,7 +1020,8 @@
                 
                 <div class="form-group">
                     <label>設定管理密碼 <small style="color: #666;">（用於日後編輯/刪除）</small></label>
-                    <input type="password" name="password" placeholder="請設定密碼" required>
+                    <input type="password" name="password" placeholder="請設定密碼" id="passwordField" required>
+                    <small id="adminPasswordHint" style="color: #ff6b6b; display: none;">管理員編輯時可不填寫密碼</small>
                 </div>
                 
                 <button type="submit" class="submit-btn">發布需求</button>
@@ -1049,6 +1050,8 @@
         </div>
     </div>
 
+    <!-- 重要提示：請修改 ADMIN_EMAILS 陣列，將 'bless25min@gmail.com' 替換為您的實際 Gmail -->
+    
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
     
@@ -1115,10 +1118,10 @@
                         '1. 在 Supabase 後台啟用 Google Provider\n' +
                         '2. 設定 Google OAuth Client ID 和 Secret\n' +
                         '3. 在 URL Configuration 中加入網站網址\n\n' +
-                        '暫時請使用「測試帳號登入」功能'
+                        '詳細說明請參考 Supabase 文件'
                     );
                 } else if (error.status === 406) {
-                    showError('資料庫權限設定問題，請使用測試帳號登入');
+                    showError('資料庫權限設定問題，請聯繫管理員');
                 } else {
                     showError('Google 登入失敗，請稍後再試');
                 }
@@ -1196,6 +1199,7 @@
                                 <p><strong>管理員：</strong>${currentUser.email}</p>
                                 <p><strong>權限：</strong>完整管理權限</p>
                                 <p><strong>登入時間：</strong>${new Date().toLocaleString('zh-TW')}</p>
+                                <p><strong>系統模式：</strong>${supabaseClient ? '資料庫模式' : '本地模式'}</p>
                             </div>
                         </div>
                         
@@ -1211,6 +1215,9 @@
                                 <button class="btn btn-primary" onclick="viewStatistics()">
                                     📈 查看統計資料
                                 </button>
+                                <button class="btn btn-primary" onclick="viewAllPasswords()">
+                                    🔑 查看所有密碼
+                                </button>
                             </div>
                         </div>
                         
@@ -1219,7 +1226,7 @@
                             <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px;">
                                 <p style="font-size: 0.9rem; color: #666;">硬編碼管理員：</p>
                                 <ul style="list-style: none; padding: 0; margin: 0.5rem 0;">
-                                    ${.map(email => `<li>• ${email}</li>`).join('')}
+                                    ${ADMIN_EMAILS.map(email => `<li>• ${email}</li>`).join('')}
                                 </ul>
                                 <p style="font-size: 0.85rem; color: #999; margin-top: 1rem;">
                                     如需新增管理員，請修改程式碼中的 ADMIN_EMAILS 陣列
@@ -1253,7 +1260,11 @@
             const dataToExport = {
                 listings: allListings,
                 exportDate: new Date().toISOString(),
-                exportedBy: currentUser.email
+                exportedBy: currentUser.email,
+                systemMode: supabaseClient ? 'database' : 'local',
+                totalListings: allListings.length,
+                totalOffers: allListings.filter(l => l.type === 'offer').length,
+                totalRequests: allListings.filter(l => l.type === 'request').length
             };
             
             const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
@@ -1313,10 +1324,39 @@
                   `今日新增：${stats.todayPosts}`);
         }
         
-        // 硬編碼的管理員列表（您可以在這裡添加管理員 email）
+        // 查看所有密碼（僅供管理員使用）
+        function viewAllPasswords() {
+            if (!isAdmin) {
+                alert('無權限執行此操作');
+                return;
+            }
+            
+            let passwordList = '🔑 所有貼文密碼雜湊值\n\n';
+            passwordList += '（注意：顯示的是密碼的雜湊值，無法還原為原始密碼）\n\n';
+            
+            allListings.forEach((listing, index) => {
+                passwordList += `${index + 1}. ${listing.brand}\n`;
+                passwordList += `   ID: ${listing.id}\n`;
+                passwordList += `   密碼雜湊: ${listing.password_hash ? listing.password_hash.substring(0, 20) + '...' : '無密碼'}\n`;
+                passwordList += `   建立時間: ${formatDate(listing.created_at)}\n\n`;
+            });
+            
+            // 創建一個文字檔案下載
+            const blob = new Blob([passwordList], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `passwords_${new Date().getTime()}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showMessage('密碼清單已下載');
+        }
+        
+        // 硬編碼的管理員列表（請在這裡設定管理員 email）
         const ADMIN_EMAILS = [
-            'bless@25min.co', // 請替換為您的實際 email
-            'admin@example.com'
+            'bless25min@gmail.com', // 您的管理員 email
+            // 'admin2@example.com' // 可以添加更多管理員
         ];
         
         // 檢查是否為管理員
@@ -1358,6 +1398,8 @@
         function showModal() {
             document.getElementById('postModal').style.display = 'block';
             toggleAdLinkField();
+            // 確保密碼提示隱藏（新建項目時）
+            document.getElementById('adminPasswordHint').style.display = 'none';
         }
         
         function closeModal() {
@@ -1366,6 +1408,11 @@
             delete document.getElementById('postForm').dataset.editId;
             document.querySelector('.submit-btn').textContent = '發布需求';
             document.getElementById('adLinkGroup').style.display = 'none';
+            // 恢復密碼欄位設定
+            const passwordField = document.querySelector('input[name="password"]');
+            passwordField.setAttribute('required', '');
+            passwordField.placeholder = '請設定密碼';
+            document.getElementById('adminPasswordHint').style.display = 'none';
         }
         
         // 廣告連結欄位控制
@@ -1578,7 +1625,7 @@
                                     🗑️ 刪除
                                 </button>
                             ` : ''}
-                            ${isAdmin ? `
+                            ${isAdmin && !isMyComment ? `
                                 <button class="comment-action-btn admin-delete" onclick="deleteComment('${comment.id}', true)">
                                     🛡️ 管理員刪除
                                 </button>
@@ -1624,7 +1671,7 @@
                                                 🗑️ 刪除
                                             </button>
                                         ` : ''}
-                                        ${isAdmin ? `
+                                        ${isAdmin && !isMyReply ? `
                                             <button class="comment-action-btn admin-delete" onclick="deleteComment('${reply.id}', true)">
                                                 🛡️ 管理員刪除
                                             </button>
@@ -2022,6 +2069,8 @@
                 document.querySelector('input[name="ad_link"]').value = listing.ad_link || '';
                 document.querySelector('input[name="password"]').value = '';
                 document.querySelector('input[name="password"]').placeholder = '留空則保持原密碼';
+                document.querySelector('input[name="password"]').removeAttribute('required');
+                document.getElementById('adminPasswordHint').style.display = 'none';
                 
                 toggleAdLinkField();
                 
@@ -2045,7 +2094,13 @@
             
             // 管理員可以直接刪除
             if (isAdmin) {
-                if (!confirm('確定要刪除此項目嗎？（管理員權限）')) {
+                const confirmMsg = `確定要刪除此項目嗎？\n\n` +
+                                 `品牌：${listing.brand}\n` +
+                                 `類型：${listing.type === 'offer' ? '提供版位' : '尋找版位'}\n` +
+                                 `發布時間：${formatDate(listing.created_at)}\n\n` +
+                                 `（管理員權限）`;
+                                 
+                if (!confirm(confirmMsg)) {
                     return;
                 }
                 
@@ -2579,7 +2634,7 @@
                 allListings = data || [];
                 
                 if (allListings.length === 0) {
-                    grid.innerHTML = '<div style="text-align: center; padding: 3rem;"><p>目前還沒有任何需求</p><p style="color: #999; font-size: 0.9rem; margin-top: 1rem;">使用測試帳號登入後可以發布第一個需求</p></div>';
+                    grid.innerHTML = '<div style="text-align: center; padding: 3rem;"><p>目前還沒有任何需求</p><p style="color: #999; font-size: 0.9rem; margin-top: 1rem;">登入後即可發布第一個需求</p></div>';
                 } else {
                     displayListings();
                 }
@@ -2888,6 +2943,8 @@
                         closeModal();
                     } else if (event.target.id === 'authModal') {
                         closeAuthModal();
+                    } else if (event.target.id === 'adminModal') {
+                        closeAdminPanel();
                     }
                 }
             };

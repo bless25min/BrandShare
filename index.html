@@ -659,6 +659,17 @@
             color: #667eea;
         }
 
+        .comment-action-btn.admin-delete {
+            color: #dc3545;
+            border-color: #dc3545;
+        }
+
+        .comment-action-btn.admin-delete:hover {
+            background: #dc3545;
+            color: white;
+            border-color: #dc3545;
+        }
+
         .comment-content {
             color: #555;
             line-height: 1.4;
@@ -797,6 +808,11 @@
                 <span class="feature-icon">🚀</span>
                 <h3>快速簡單上手</h3>
                 <p>簡單三步驟：發布需求、配對品牌、開始合作。無需複雜流程。</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">🛡️</span>
+                <h3>安全管理功能</h3>
+                <p>管理員可以刪除不當留言，維護社群品質。確保交流環境的專業性。</p>
             </div>
         </div>
     </section>
@@ -1028,6 +1044,9 @@
                                     🗑️ 刪除
                                 </button>
                             ` : ''}
+                            <button class="comment-action-btn admin-delete" onclick="deleteComment('${comment.id}', true)">
+                                🛡️ 管理員刪除
+                            </button>
                         </div>
                         
                         <!-- 回覆表單 -->
@@ -1062,16 +1081,19 @@
                                         </div>
                                     </div>
                                     <div class="comment-content">${reply.content}</div>
-                                    ${isMyReply ? `
-                                        <div class="comment-actions">
+                                    <div class="comment-actions">
+                                        ${isMyReply ? `
                                             <button class="comment-action-btn" onclick="editComment('${reply.id}')">
                                                 ✏️ 編輯
                                             </button>
                                             <button class="comment-action-btn" onclick="deleteComment('${reply.id}')">
                                                 🗑️ 刪除
                                             </button>
-                                        </div>
-                                    ` : ''}
+                                        ` : ''}
+                                        <button class="comment-action-btn admin-delete" onclick="deleteComment('${reply.id}', true)">
+                                            🛡️ 管理員刪除
+                                        </button>
+                                    </div>
                                 </div>
                             `;
                         }).join('')}
@@ -1247,8 +1269,39 @@
         }
         
         // 刪除留言
-        async function deleteComment(commentId) {
+        async function deleteComment(commentId, isAdmin = false) {
             if (!confirm('確定要刪除此留言嗎？')) return;
+            
+            // 如果是管理員刪除，需要驗證管理員密碼
+            if (isAdmin) {
+                const adminPassword = prompt('請輸入管理員密碼：');
+                if (!adminPassword) return;
+                
+                try {
+                    if (supabaseClient) {
+                        const { data: isValidAdmin } = await supabaseClient.rpc('verify_admin_password', {
+                            input_password: adminPassword
+                        });
+                        
+                        if (!isValidAdmin) {
+                            alert('管理員密碼錯誤！');
+                            return;
+                        }
+                    } else {
+                        // 本地模式管理員密碼驗證
+                        const adminHash = await hashPassword(adminPassword);
+                        const validAdminHash = '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8'; // password
+                        if (adminHash !== validAdminHash) {
+                            alert('管理員密碼錯誤！');
+                            return;
+                        }
+                    }
+                } catch (error) {
+                    console.error('管理員驗證錯誤:', error);
+                    alert('驗證失敗，請稍後再試');
+                    return;
+                }
+            }
             
             try {
                 if (supabaseClient) {
@@ -1259,7 +1312,7 @@
                     
                     if (error) throw error;
                     
-                    showMessage('留言刪除成功！');
+                    showMessage(isAdmin ? '管理員刪除留言成功！' : '留言刪除成功！');
                     // 重新載入當前留言區
                     const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
                     if (commentElement) {
@@ -1268,7 +1321,7 @@
                         await loadComments(listingId);
                     }
                 } else {
-                    showMessage('刪除成功！（本地模式）');
+                    showMessage(isAdmin ? '管理員刪除成功！（本地模式）' : '刪除成功！（本地模式）');
                 }
             } catch (error) {
                 console.error('刪除留言錯誤:', error);

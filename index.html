@@ -939,70 +939,63 @@
             
             if (supabaseClient) {
                 try {
-                    // 載入所有公開留言
-                    const { data: publicComments, error } = await supabaseClient
+                    // 載入所有留言（公開和私人）來計算數量
+                    const { data: allCommentsData, error: allError } = await supabaseClient
                         .from('comments')
                         .select('*')
                         .eq('listing_id', listingId)
-                        .eq('is_private', false)
                         .order('created_at', { ascending: true });
                     
-                    if (error) throw error;
+                    if (allError) throw allError;
                     
-                    // 檢查是否有私人留言
-                    const { count: privateCount } = await supabaseClient
-                        .from('comments')
-                        .select('*', { count: 'exact', head: true })
-                        .eq('listing_id', listingId)
-                        .eq('is_private', true);
+                    // 分離公開和私人留言
+                    const publicComments = (allCommentsData || []).filter(c => !c.is_private);
+                    const privateComments = (allCommentsData || []).filter(c => c.is_private);
+                    const privateCount = privateComments.length;
                     
                     // 檢查用戶是否為發布者
                     const isOwner = cachedPasswords[listingId] && await checkListingOwnership(listingId, cachedPasswords[listingId]);
                     
-                    let allComments = publicComments || [];
+                    let displayableComments = publicComments;
                     
-                    // 如果是發布者，載入私人留言
+                    // 如果是發布者，顯示所有留言
                     if (isOwner) {
-                        const { data: privateComments, error: privateError } = await supabaseClient
-                            .from('comments')
-                            .select('*')
-                            .eq('listing_id', listingId)
-                            .eq('is_private', true)
-                            .order('created_at', { ascending: true });
-                        
-                        if (!privateError && privateComments) {
-                            allComments = [...allComments, ...privateComments]
-                                .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-                        }
+                        displayableComments = allCommentsData || [];
                     }
                     
-                    displayComments(allComments, listingId, isOwner, privateCount || 0);
+                    displayComments(displayableComments, listingId, isOwner, privateCount);
                 } catch (error) {
                     console.error('載入留言錯誤:', error);
                     commentsList.innerHTML = '<div style="text-align: center; color: #666;">載入留言失敗</div>';
                 }
             } else {
-                // 本地模式
-                const sampleComments = [
-                    {
-                        id: '1',
-                        listing_id: listingId,
-                        author_name: '行銷小幫手',
-                        content: '這個廣告效果很不錯！我們也想要類似的合作機會。',
-                        is_private: false,
-                        created_at: new Date(Date.now() - 2 * 3600000).toISOString()
-                    },
-                    {
-                        id: '2',
-                        listing_id: listingId,
-                        author_name: '品牌經理',
-                        content: '已私訊詳細討論，歡迎長期合作！',
-                        is_private: true,
-                        created_at: new Date(Date.now() - 1 * 3600000).toISOString()
-                    }
-                ];
+                // 本地模式 - 使用記憶體儲存留言
+                if (!window.localComments) {
+                    window.localComments = {};
+                }
                 
-                displayComments(sampleComments.filter(c => !c.is_private), listingId, false, 1);
+                if (!window.localComments[listingId]) {
+                    window.localComments[listingId] = [
+                        {
+                            id: '1',
+                            listing_id: listingId,
+                            author_name: '行銷小幫手',
+                            content: '這個廣告效果很不錯！我們也想要類似的合作機會。',
+                            is_private: false,
+                            created_at: new Date(Date.now() - 2 * 3600000).toISOString()
+                        }
+                    ];
+                }
+                
+                const allComments = window.localComments[listingId];
+                const publicComments = allComments.filter(c => !c.is_private);
+                const privateCount = allComments.filter(c => c.is_private).length;
+                
+                // 檢查是否為發布者
+                const isOwner = cachedPasswords[listingId] && await checkListingOwnership(listingId, cachedPasswords[listingId]);
+                const displayableComments = isOwner ? allComments : publicComments;
+                
+                displayComments(displayableComments, listingId, isOwner, privateCount);
             }
         }
         
@@ -1124,8 +1117,13 @@
             // 顯示留言
             const visibleComments = isOwner ? comments : comments.filter(c => !c.is_private);
             
-            if (visibleComments.length === 0 && privateCount === 0) {
-                html += '<div style="text-align: center; color: #666; padding: 1rem;">暫無留言，來留下第一則留言吧！</div>';
+            if (visibleComments.length === 0) {
+                if (privateCount === 0) {
+                    html += '<div style="text-align: center; color: #666; padding: 1rem;">暫無留言，來留下第一則留言吧！</div>';
+                } else if (!isOwner) {
+                    // 如果只有私人留言且用戶不是發布者，顯示提示文字
+                    html += '<div style="text-align: center; color: #666; padding: 1rem;">暫無公開留言</div>';
+                }
             } else {
                 html += visibleComments.map(comment => {
                     const isPrivate = comment.is_private;
@@ -1176,6 +1174,7 @@
             submitBtn.textContent = '發送中...';
             
             const comment = {
+                id: Date.now().toString(),
                 listing_id: listingId,
                 author_name: authorName,
                 content: content,
@@ -1201,6 +1200,9 @@
             
             try {
                 if (supabaseClient) {
+                    // 移除本地生成的 id，讓資料庫自動生成
+                    delete comment.id;
+                    
                     const { error } = await supabaseClient
                         .from('comments')
                         .insert([comment]);
@@ -1209,8 +1211,18 @@
                     
                     showMessage(isPrivate ? '私人留言發布成功！請記住您的密碼。' : '留言發布成功！');
                 } else {
-                    // 本地模式
-                    showMessage(isPrivate ? '私人留言發布成功！（本地模式）' : '留言發布成功！（本地模式）');
+                    // 本地模式 - 使用記憶體儲存
+                    if (!window.localComments) {
+                        window.localComments = {};
+                    }
+                    
+                    if (!window.localComments[listingId]) {
+                        window.localComments[listingId] = [];
+                    }
+                    
+                    window.localComments[listingId].push(comment);
+                    
+                    showMessage(isPrivate ? '私人留言發布成功！請記住您的密碼。（本地模式）' : '留言發布成功！（本地模式）');
                 }
                 
                 // 清空表單
@@ -1221,7 +1233,7 @@
                 form.querySelector('.private-password-section').classList.remove('active');
                 
                 // 重新載入留言
-                await loadComments(listingId);
+                await loadComments(listingId, true);
                 
             } catch (error) {
                 console.error('提交留言錯誤:', error);

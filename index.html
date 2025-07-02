@@ -517,8 +517,174 @@
             line-height: 1.6;
         }
 
-        /* Responsive */
-        @media (max-width: 768px) {
+        /* Comments Section */
+        .comments-section {
+            margin-top: 1rem;
+            border-top: 1px solid #f0f0f0;
+            padding-top: 1rem;
+        }
+
+        .comments-toggle {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            justify-content: space-between;
+        }
+
+        .comments-toggle:hover {
+            background: #e9ecef;
+        }
+
+        .comments-content {
+            display: none;
+            margin-top: 1rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .comments-content.active {
+            display: block;
+        }
+
+        .comment-form {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .comment-input-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .comment-input {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: none;
+            min-height: 60px;
+        }
+
+        .comment-submit {
+            padding: 0.5rem 1rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            height: fit-content;
+        }
+
+        .comment-submit:hover {
+            background: #5a6fd8;
+        }
+
+        .comment-options {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.8rem;
+        }
+
+        .comment-option {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .comment-list {
+            space-y: 0.75rem;
+        }
+
+        .comment {
+            padding: 0.75rem;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+        }
+
+        .comment.private {
+            background: #fff3cd;
+            border-color: #ffeaa7;
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .comment-author {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .comment-time {
+            color: #666;
+        }
+
+        .comment-private-badge {
+            background: #ffc107;
+            color: #000;
+            padding: 0.125rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .comment-content {
+            color: #555;
+            line-height: 1.4;
+        }
+
+        /* Modal for Comments */
+        .comments-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2001;
+        }
+
+        .comments-modal-content {
+            background: white;
+            width: 90%;
+            max-width: 600px;
+            height: 80vh;
+            margin: 10vh auto;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .comments-modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .comments-modal-body {
+            padding: 1.5rem;
+            flex: 1;
+            overflow-y: auto;
+        }
             .hero h1 {
                 font-size: 2rem;
             }
@@ -709,6 +875,151 @@
         // 顯示聯絡資訊
         function showContact(contact) {
             alert('聯絡方式：' + contact);
+        }
+        
+        // 留言系統功能
+        function toggleComments(listingId) {
+            const commentsSection = document.querySelector(`.comments-content[data-listing="${listingId}"]`);
+            const toggle = document.querySelector(`.comments-toggle[data-listing="${listingId}"]`);
+            
+            if (commentsSection.classList.contains('active')) {
+                commentsSection.classList.remove('active');
+                toggle.querySelector('.toggle-text').textContent = '顯示留言';
+                toggle.querySelector('.toggle-icon').textContent = '💬';
+            } else {
+                commentsSection.classList.add('active');
+                toggle.querySelector('.toggle-text').textContent = '隱藏留言';
+                toggle.querySelector('.toggle-icon').textContent = '🔽';
+                loadComments(listingId);
+            }
+        }
+        
+        // 載入留言
+        async function loadComments(listingId) {
+            const commentsList = document.querySelector(`.comment-list[data-listing="${listingId}"]`);
+            
+            if (supabaseClient) {
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('comments')
+                        .select('*')
+                        .eq('listing_id', listingId)
+                        .order('created_at', { ascending: true });
+                    
+                    if (error) throw error;
+                    
+                    displayComments(data || [], listingId);
+                } catch (error) {
+                    console.error('載入留言錯誤:', error);
+                    commentsList.innerHTML = '<div style="text-align: center; color: #666;">載入留言失敗</div>';
+                }
+            } else {
+                // 本地模式 - 顯示範例留言
+                const sampleComments = [
+                    {
+                        id: '1',
+                        listing_id: listingId,
+                        author_name: '行銷小幫手',
+                        content: '這個廣告效果很不錯！我們也想要類似的合作機會。',
+                        is_private: false,
+                        created_at: new Date(Date.now() - 2 * 3600000).toISOString()
+                    },
+                    {
+                        id: '2',
+                        listing_id: listingId,
+                        author_name: '品牌經理',
+                        content: '已私訊詳細討論，歡迎長期合作！',
+                        is_private: true,
+                        created_at: new Date(Date.now() - 1 * 3600000).toISOString()
+                    }
+                ];
+                displayComments(sampleComments, listingId);
+            }
+        }
+        
+        // 顯示留言
+        function displayComments(comments, listingId) {
+            const commentsList = document.querySelector(`.comment-list[data-listing="${listingId}"]`);
+            
+            if (comments.length === 0) {
+                commentsList.innerHTML = '<div style="text-align: center; color: #666; padding: 1rem;">暫無留言，來留下第一則留言吧！</div>';
+                return;
+            }
+            
+            commentsList.innerHTML = comments.map(comment => {
+                const isPrivate = comment.is_private;
+                const privateClass = isPrivate ? ' private' : '';
+                const privateBadge = isPrivate ? '<span class="comment-private-badge">私人留言</span>' : '';
+                
+                return `
+                    <div class="comment${privateClass}">
+                        <div class="comment-header">
+                            <span class="comment-author">${comment.author_name}</span>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                ${privateBadge}
+                                <span class="comment-time">${formatDate(comment.created_at)}</span>
+                            </div>
+                        </div>
+                        <div class="comment-content">${comment.content}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // 提交留言
+        async function submitComment(listingId) {
+            const form = document.querySelector(`.comment-form[data-listing="${listingId}"]`);
+            const textarea = form.querySelector('.comment-input');
+            const isPrivate = form.querySelector('input[name="is_private"]').checked;
+            const authorName = form.querySelector('input[name="author_name"]').value.trim();
+            const content = textarea.value.trim();
+            
+            if (!content || !authorName) {
+                alert('請填寫姓名和留言內容');
+                return;
+            }
+            
+            const submitBtn = form.querySelector('.comment-submit');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '發送中...';
+            
+            const comment = {
+                listing_id: listingId,
+                author_name: authorName,
+                content: content,
+                is_private: isPrivate,
+                created_at: new Date().toISOString()
+            };
+            
+            try {
+                if (supabaseClient) {
+                    const { error } = await supabaseClient
+                        .from('comments')
+                        .insert([comment]);
+                    
+                    if (error) throw error;
+                    
+                    showMessage('留言發布成功！');
+                } else {
+                    // 本地模式
+                    showMessage('留言發布成功！（本地模式）');
+                }
+                
+                // 清空表單
+                textarea.value = '';
+                form.querySelector('input[name="author_name"]').value = '';
+                form.querySelector('input[name="is_private"]').checked = false;
+                
+                // 重新載入留言
+                await loadComments(listingId);
+                
+            } catch (error) {
+                console.error('提交留言錯誤:', error);
+                alert('留言發布失敗，請稍後再試');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '發送';
+            }
         }
         
         // 篩選列表
@@ -1153,6 +1464,43 @@
                         <div class="admin-actions">
                             <button class="btn-sm btn-edit" onclick="editListing('${data.id}')">編輯</button>
                             <button class="btn-sm btn-delete" onclick="deleteListing('${data.id}')">刪除</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 留言系統 -->
+                    <div class="comments-section">
+                        <div class="comments-toggle" data-listing="${data.id}" onclick="toggleComments('${data.id}')">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <span class="toggle-icon">💬</span>
+                                <span class="toggle-text">顯示留言</span>
+                            </div>
+                            <span style="font-size: 0.8rem; color: #666;">討論合作細節</span>
+                        </div>
+                        
+                        <div class="comments-content" data-listing="${data.id}">
+                            <!-- 留言表單 -->
+                            <div class="comment-form" data-listing="${data.id}">
+                                <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                    <input type="text" name="author_name" placeholder="您的姓名" 
+                                           style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                                </div>
+                                <div class="comment-input-group">
+                                    <textarea class="comment-input" placeholder="輸入您的留言或問題..."></textarea>
+                                    <button class="comment-submit" onclick="submitComment('${data.id}')">發送</button>
+                                </div>
+                                <div class="comment-options">
+                                    <label class="comment-option">
+                                        <input type="checkbox" name="is_private">
+                                        <span>🔒 私人留言（僅發布者可見）</span>
+                                    </label>
+                                    <span style="color: #666;">💡 公開留言可以讓其他人看到討論內容</span>
+                                </div>
+                            </div>
+                            
+                            <!-- 留言列表 -->
+                            <div class="comment-list" data-listing="${data.id}">
+                                <!-- 留言會動態載入到這裡 -->
+                            </div>
                         </div>
                     </div>
                 </div>

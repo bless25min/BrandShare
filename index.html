@@ -897,6 +897,19 @@
             <p style="font-size: 0.9rem; opacity: 0.9;">
                 ⚠️ Google OAuth 設定中 - 目前使用本地模式運行，資料僅暫存於瀏覽器
             </p>
+            <details style="margin-top: 0.5rem;">
+                <summary style="cursor: pointer; font-size: 0.85rem; opacity: 0.8;">資料庫設定說明（點擊查看）</summary>
+                <div style="margin-top: 0.5rem; font-size: 0.8rem; opacity: 0.8; line-height: 1.5;">
+                    <p>如需完整功能，請在 Supabase 建立以下表格：</p>
+                    <ul style="list-style: none; padding-left: 1rem;">
+                        <li>• listings 表（需求列表）</li>
+                        <li>• comments 表（留言）- 必須包含 author_email (text not null) 欄位</li>
+                        <li>• users 表（用戶資料）</li>
+                        <li>• admins 表（管理員）</li>
+                    </ul>
+                    <p style="margin-top: 0.5rem;">建議在 Supabase SQL Editor 執行建表語句，或調整現有表格結構。</p>
+                </div>
+            </details>
         </div>
     </section>
 
@@ -1126,8 +1139,10 @@
                         '1. 在 Supabase 後台啟用 Google Provider\n' +
                         '2. 設定 Google OAuth Client ID 和 Secret\n' +
                         '3. 在 URL Configuration 中加入網站網址\n\n' +
-                        '詳細說明請參考 Supabase 文件'
+                        '暫時請使用「測試帳號登入」功能'
                     );
+                } else if (error.status === 406) {
+                    showError('資料庫權限設定問題，請使用測試帳號登入');
                 } else {
                     showError('Google 登入失敗，請稍後再試');
                 }
@@ -1197,8 +1212,16 @@
                     .eq('user_id', currentUser.id)
                     .single();
                 
+                // 如果是 406 錯誤，表示表格可能不存在或沒有權限
+                if (error && error.code === '406') {
+                    console.log('無法存取 admins 表，跳過管理員檢查');
+                    isAdmin = false;
+                    return;
+                }
+                
                 isAdmin = !error && data !== null;
             } catch (error) {
+                console.log('管理員檢查錯誤:', error);
                 isAdmin = false;
             }
         }
@@ -1279,8 +1302,22 @@
                     
                     if (error) {
                         console.error('載入留言錯誤詳情:', error);
+                        // 如果是關聯查詢失敗，嘗試簡單查詢
+                        if (error.code === '42P01' || error.code === 'PGRST301') {
+                            console.log('嘗試簡單查詢留言');
+                            const { data: simpleData, error: simpleError } = await supabaseClient
+                                .from('comments')
+                                .select('*')
+                                .eq('listing_id', listingId)
+                                .order('created_at', { ascending: true });
+                            
+                            if (!simpleError && simpleData) {
+                                displayComments(simpleData, listingId);
+                                return;
+                            }
+                        }
                         // 如果是資料庫連接問題，使用範例留言
-                        if (error.status === 400 || error.status === 404) {
+                        if (error.status === 400 || error.status === 404 || error.status === 406) {
                             console.log('使用範例留言（資料庫連接問題）');
                             showSampleComments(listingId);
                             return;
@@ -1317,6 +1354,7 @@
                     id: '1',
                     listing_id: listingId,
                     author_name: '行銷小幫手',
+                    author_email: 'helper@example.com',
                     content: '這個廣告效果很不錯！我們也想要類似的合作機會。',
                     parent_comment_id: null,
                     user_id: 'sample-user-1',
@@ -1331,6 +1369,7 @@
                     id: '2',
                     listing_id: listingId,
                     author_name: '品牌經理',
+                    author_email: 'manager@example.com',
                     content: '已透過聯絡方式詳細討論，期待合作！',
                     parent_comment_id: '1',
                     user_id: 'sample-user-2',
@@ -1499,6 +1538,7 @@
                 author_name: currentUser.user_metadata?.full_name || 
                            currentUser.user_metadata?.name || 
                            currentUser.email?.split('@')[0],
+                author_email: currentUser.email, // 加入 email 欄位
                 content: content,
                 parent_comment_id: parentCommentId,
                 user_id: currentUser.id,
@@ -1514,9 +1554,9 @@
                     
                     if (error) {
                         console.error('Supabase 錯誤詳情:', error);
-                        // 如果資料庫連接失敗，使用本地模式
-                        if (error.status === 400 || error.status === 404) {
-                            console.log('使用本地模式新增回覆');
+                        // 如果是資料庫結構問題（缺少欄位等），使用本地模式
+                        if (error.code === '23502' || error.code === '42703' || error.status === 400 || error.status === 404) {
+                            console.log('使用本地模式新增回覆（資料庫結構問題）');
                             showMessage('回覆發布成功！（本地模式）');
                             contentInput.value = '';
                             toggleReplyForm(parentCommentId);
@@ -1575,6 +1615,7 @@
                 author_name: currentUser.user_metadata?.full_name || 
                            currentUser.user_metadata?.name || 
                            currentUser.email?.split('@')[0],
+                author_email: currentUser.email, // 加入 email 欄位
                 content: content,
                 parent_comment_id: null,
                 user_id: currentUser.id,
@@ -1592,9 +1633,15 @@
                     
                     if (error) {
                         console.error('Supabase 錯誤詳情:', error);
-                        // 如果資料庫連接失敗，使用本地模式
-                        if (error.status === 400 || error.status === 404) {
-                            console.log('使用本地模式新增留言');
+                        // 如果是資料庫結構問題（缺少欄位等），使用本地模式
+                        if (error.code === '23502' || error.code === '42703' || error.status === 400 || error.status === 404) {
+                            console.log('使用本地模式新增留言（資料庫結構問題）');
+                            // 創建本地留言
+                            const localComment = {
+                                ...comment,
+                                id: 'local-' + Date.now(),
+                                created_at: new Date().toISOString()
+                            };
                             showMessage('留言發布成功！（本地模式）');
                             textarea.value = '';
                             showSampleComments(listingId);
@@ -1730,6 +1777,7 @@
                 }
             } catch (error) {
                 console.error('獲取留言數量錯誤:', error);
+                // 忽略錯誤，保持原有顯示
             }
         }
         
@@ -1779,18 +1827,35 @@
                 let isAuthorized = false;
                 
                 if (supabaseClient) {
-                    const { data: isAdminUser } = await supabaseClient.rpc('verify_admin_password', {
-                        input_password: password
-                    });
-                    
-                    if (isAdminUser || isAdmin) {
-                        isAuthorized = true;
-                    } else {
-                        const { data: userHash } = await supabaseClient.rpc('hash_password', {
-                            password: password
+                    try {
+                        const { data: isAdminUser } = await supabaseClient.rpc('verify_admin_password', {
+                            input_password: password
                         });
                         
-                        if (listing.password_hash === userHash || listing.password === password) {
+                        if (isAdminUser || isAdmin) {
+                            isAuthorized = true;
+                        } else {
+                            try {
+                                const { data: userHash } = await supabaseClient.rpc('hash_password', {
+                                    password: password
+                                });
+                                
+                                if (listing.password_hash === userHash || listing.password === password) {
+                                    isAuthorized = true;
+                                }
+                            } catch (rpcError) {
+                                // 如果 RPC 呼叫失敗，使用本地 hash
+                                const localHash = await hashPassword(password);
+                                if (listing.password_hash === localHash || listing.password === password) {
+                                    isAuthorized = true;
+                                }
+                            }
+                        }
+                    } catch (adminError) {
+                        // 如果 RPC 呼叫失敗，使用本地驗證
+                        console.log('RPC 呼叫失敗，使用本地驗證');
+                        const localHash = await hashPassword(password);
+                        if (listing.password_hash === localHash || listing.password === password) {
                             isAuthorized = true;
                         }
                     }
@@ -1877,6 +1942,13 @@
                     
                     if (error) {
                         console.error('刪除錯誤:', error);
+                        if (error.status === 406 || error.status === 400 || error.status === 404) {
+                            // 本地模式刪除
+                            allListings = allListings.filter(item => item.id !== id);
+                            displayListings();
+                            showMessage('刪除成功！（本地模式）');
+                            return;
+                        }
                         alert('刪除失敗！');
                         return;
                     }
@@ -2282,8 +2354,8 @@
                 
                 if (error) {
                     console.error('載入 listings 錯誤詳情:', error);
-                    // 如果是 400 錯誤，可能是表格不存在或權限問題
-                    if (error.code === '42P01' || error.status === 400) {
+                    // 如果是 400/404/406 錯誤，可能是表格不存在或權限問題
+                    if (error.code === '42P01' || error.status === 400 || error.status === 404 || error.status === 406) {
                         console.log('使用範例資料（資料庫連接問題）');
                         showSampleData();
                         return;
@@ -2389,7 +2461,7 @@
                 // 測試連接
                 try {
                     const { data, error } = await supabaseClient.auth.getSession();
-                    if (error && error.status === 400) {
+                    if (error && (error.status === 400 || error.status === 406)) {
                         console.log('Supabase 連接問題，切換到本地模式');
                         isLocalMode = true;
                     }
@@ -2403,11 +2475,16 @@
                 }
                 
                 // 檢查用戶登入狀態
-                const { data: { user } } = await supabaseClient.auth.getUser();
-                currentUser = user;
-                
-                if (currentUser) {
-                    await checkAdminStatus();
+                try {
+                    const { data: { user } } = await supabaseClient.auth.getUser();
+                    currentUser = user;
+                    
+                    if (currentUser) {
+                        await checkAdminStatus();
+                    }
+                } catch (error) {
+                    console.log('無法獲取用戶狀態:', error);
+                    currentUser = null;
                 }
                 
                 updateAuthButtons();

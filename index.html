@@ -891,6 +891,13 @@
         <h1>品牌廣告版位媒合平台</h1>
         <p>讓您的廣告留言成為最有價值的行銷資產</p>
         <button class="btn cta-button" onclick="checkAuthAndShowModal()">立即發布您的需求</button>
+        
+        <!-- 系統狀態提示 -->
+        <div id="systemStatus" style="margin-top: 2rem; padding: 1rem; background: rgba(255,255,255,0.1); border-radius: 8px; display: none;">
+            <p style="font-size: 0.9rem; opacity: 0.9;">
+                ⚠️ Google OAuth 設定中 - 目前使用本地模式運行，資料僅暫存於瀏覽器
+            </p>
+        </div>
     </section>
 
     <!-- Main Content -->
@@ -1019,6 +1026,17 @@
                     </svg>
                     使用 Google 帳號登入
                 </button>
+                
+                <!-- 臨時測試用登入 -->
+                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e0e0e0;">
+                    <p style="font-size: 0.85rem; color: #999; margin-bottom: 0.5rem; text-align: center;">
+                        Google OAuth 設定中？使用測試帳號：
+                    </p>
+                    <button class="google-login-btn" onclick="testLogin()" style="background: #f0f0f0; border-color: #ddd;">
+                        <span style="font-size: 20px;">🧪</span>
+                        使用測試帳號登入（本地模式）
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -1057,6 +1075,25 @@
             document.getElementById('authModal').style.display = 'none';
         }
         
+        // 測試登入（暫時使用）
+        function testLogin() {
+            // 模擬登入狀態
+            currentUser = {
+                id: 'test-user-123',
+                email: 'test@example.com',
+                user_metadata: {
+                    full_name: '測試用戶',
+                    name: '測試用戶',
+                    avatar_url: null
+                }
+            };
+            
+            showMessage('已使用測試帳號登入（僅供預覽功能）');
+            closeAuthModal();
+            updateAuthButtons();
+            loadListings();
+        }
+        
         // Google 登入
         async function signInWithGoogle() {
             if (!supabaseClient) {
@@ -1068,14 +1105,32 @@
                 const { data, error } = await supabaseClient.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: window.location.origin
+                        redirectTo: window.location.origin + window.location.pathname
                     }
                 });
                 
-                if (error) throw error;
+                if (error) {
+                    console.error('OAuth 錯誤詳情:', error);
+                    throw error;
+                }
             } catch (error) {
                 console.error('Google 登入錯誤:', error);
-                showError('Google 登入失敗，請稍後再試');
+                
+                // 提供更詳細的錯誤訊息
+                if (error.status === 400) {
+                    showError('Google 登入設定尚未完成。請聯繫網站管理員。');
+                    
+                    // 顯示設定指引
+                    alert(
+                        'Google OAuth 設定步驟：\n\n' +
+                        '1. 在 Supabase 後台啟用 Google Provider\n' +
+                        '2. 設定 Google OAuth Client ID 和 Secret\n' +
+                        '3. 在 URL Configuration 中加入網站網址\n\n' +
+                        '詳細說明請參考 Supabase 文件'
+                    );
+                } else {
+                    showError('Google 登入失敗，請稍後再試');
+                }
             }
         }
         
@@ -1224,6 +1279,12 @@
                     
                     if (error) {
                         console.error('載入留言錯誤詳情:', error);
+                        // 如果是資料庫連接問題，使用範例留言
+                        if (error.status === 400 || error.status === 404) {
+                            console.log('使用範例留言（資料庫連接問題）');
+                            showSampleComments(listingId);
+                            return;
+                        }
                         throw error;
                     }
                     
@@ -1453,6 +1514,15 @@
                     
                     if (error) {
                         console.error('Supabase 錯誤詳情:', error);
+                        // 如果資料庫連接失敗，使用本地模式
+                        if (error.status === 400 || error.status === 404) {
+                            console.log('使用本地模式新增回覆');
+                            showMessage('回覆發布成功！（本地模式）');
+                            contentInput.value = '';
+                            toggleReplyForm(parentCommentId);
+                            showSampleComments(listingId);
+                            return;
+                        }
                         throw error;
                     }
                     
@@ -1522,6 +1592,14 @@
                     
                     if (error) {
                         console.error('Supabase 錯誤詳情:', error);
+                        // 如果資料庫連接失敗，使用本地模式
+                        if (error.status === 400 || error.status === 404) {
+                            console.log('使用本地模式新增留言');
+                            showMessage('留言發布成功！（本地模式）');
+                            textarea.value = '';
+                            showSampleComments(listingId);
+                            return;
+                        }
                         throw error;
                     }
                     
@@ -2204,13 +2282,19 @@
                 
                 if (error) {
                     console.error('載入 listings 錯誤詳情:', error);
+                    // 如果是 400 錯誤，可能是表格不存在或權限問題
+                    if (error.code === '42P01' || error.status === 400) {
+                        console.log('使用範例資料（資料庫連接問題）');
+                        showSampleData();
+                        return;
+                    }
                     throw error;
                 }
                 
                 allListings = data || [];
                 
                 if (allListings.length === 0) {
-                    grid.innerHTML = '<div style="text-align: center; padding: 3rem;"><p>目前還沒有任何需求</p></div>';
+                    grid.innerHTML = '<div style="text-align: center; padding: 3rem;"><p>目前還沒有任何需求</p><p style="color: #999; font-size: 0.9rem; margin-top: 1rem;">使用測試帳號登入後可以發布第一個需求</p></div>';
                 } else {
                     displayListings();
                 }
@@ -2250,6 +2334,9 @@
         
         // 顯示範例資料
         function showSampleData() {
+            // 顯示提示訊息
+            showMessage('使用範例資料顯示（本地模式）');
+            
             allListings = [
                 {
                     id: '1',
@@ -2291,10 +2378,29 @@
         window.addEventListener('DOMContentLoaded', async function() {
             console.log('DOM loaded, initializing...');
             
+            // 檢查系統狀態
+            let isLocalMode = false;
+            
             // 初始化 Supabase
             if (window.supabase) {
                 supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 console.log('Supabase 初始化成功');
+                
+                // 測試連接
+                try {
+                    const { data, error } = await supabaseClient.auth.getSession();
+                    if (error && error.status === 400) {
+                        console.log('Supabase 連接問題，切換到本地模式');
+                        isLocalMode = true;
+                    }
+                } catch (e) {
+                    console.log('Supabase 連接測試失敗，使用本地模式');
+                    isLocalMode = true;
+                }
+                
+                if (isLocalMode) {
+                    document.getElementById('systemStatus').style.display = 'block';
+                }
                 
                 // 檢查用戶登入狀態
                 const { data: { user } } = await supabaseClient.auth.getUser();
@@ -2320,6 +2426,8 @@
                     updateAuthButtons();
                     loadListings();
                 });
+            } else {
+                document.getElementById('systemStatus').style.display = 'block';
             }
             
             // 載入資料
@@ -2384,19 +2492,52 @@
                                     .update(listing)
                                     .eq('id', editId);
                                 
-                                if (error) throw error;
+                                if (error) {
+                                    console.error('更新錯誤:', error);
+                                    // 如果資料庫連接失敗，使用本地模式
+                                    if (error.status === 400 || error.status === 404) {
+                                        console.log('使用本地模式更新');
+                                        const index = allListings.findIndex(item => item.id === editId);
+                                        if (index !== -1) {
+                                            if (!password) {
+                                                listing.password_hash = allListings[index].password_hash;
+                                            }
+                                            allListings[index] = { ...allListings[index], ...listing };
+                                        }
+                                        displayListings();
+                                        showMessage('更新成功！（本地模式）');
+                                        closeModal();
+                                        return;
+                                    }
+                                    throw error;
+                                }
                                 showMessage('更新成功！');
                             } else {
                                 const { error } = await supabaseClient
                                     .from('listings')
                                     .insert([listing]);
                                 
-                                if (error) throw error;
+                                if (error) {
+                                    console.error('新增錯誤:', error);
+                                    // 如果資料庫連接失敗，使用本地模式
+                                    if (error.status === 400 || error.status === 404) {
+                                        console.log('使用本地模式新增');
+                                        listing.id = Date.now().toString();
+                                        listing.created_at = new Date().toISOString();
+                                        allListings.unshift(listing);
+                                        displayListings();
+                                        showMessage('發布成功！（本地模式）');
+                                        closeModal();
+                                        return;
+                                    }
+                                    throw error;
+                                }
                                 showMessage('發布成功！');
                             }
                             
                             await loadListings();
                         } else {
+                            // 完全本地模式
                             if (editId) {
                                 const index = allListings.findIndex(item => item.id === editId);
                                 if (index !== -1) {

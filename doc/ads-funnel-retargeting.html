@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>廣告擴量與再行銷漏斗策略｜打造高 ROAS 的轉換引擎 - BrandShare</title>
+    <meta name="description" content="掌握一美元引爆法、階梯式預算拉升與封閉式再行銷漏斗設計。學習如何建構可自我強化的廣告漏斗，提升整體ROAS與轉換成效。">
+    <meta name="keywords" content="廣告擴量,再行銷策略,轉換API,封閉漏斗,ROAS優化,一美元引爆法,預算拉升,CAPI串接">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="廣告擴量與再行銷漏斗策略｜打造高 ROAS 的轉換引擎">
+    <meta property="og:description" content="從預算放大策略到封閉式轉換流程，建構可自我強化的廣告漏斗">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://bless25min.github.io/BrandShare/ads-funnel-retargeting.html">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.8;
+            color: #333;
+            background-color: #f9f9f9;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 3rem 0;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            line-height: 1.3;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin-top: 3rem;
+            margin-bottom: 1.5rem;
+            color: #2d3748;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            color: #4a5568;
+        }
+
+        .summary {
+            background: #f7fafc;
+            border-left: 4px solid #667eea;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .nav-breadcrumb {
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+            color: #718096;
+        }
+
+        .nav-breadcrumb a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .nav-breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .strategy-box {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .funnel-structure {
+            background: #f0f4f8;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .funnel-layer {
+            background: white;
+            border-left: 4px solid #667eea;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1rem;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .funnel-layer h4 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        .highlight-tip {
+            background: #fef5e7;
+            border: 2px solid #f6ad55;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .metrics-box {
+            background: #e6fffa;
+            border-left: 4px solid #38b2ac;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .tool-recommendation {
+            background: #edf2f7;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .faq-section {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .faq-item {
+            margin-bottom: 1.5rem;
+        }
+
+        .faq-item strong {
+            color: #e53e3e;
+            margin-right: 0.5rem;
+        }
+
+        .next-steps {
+            background: #edf2f7;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 3rem 0;
+        }
+
+        ul, ol {
+            margin: 1rem 0 1rem 2rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 2px solid #e2e8f0;
+        }
+
+        .nav-links a {
+            padding: 0.75rem 1.5rem;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: background 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            background: #5a6fd8;
+        }
+
+        .emoji-icon {
+            font-size: 1.5rem;
+            margin-right: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+            }
+            
+            .nav-links {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .nav-links a {
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>廣告擴量與再行銷漏斗策略｜打造高 ROAS 的轉換引擎</h1>
+        </div>
+    </header>
+
+    <div class="container">
+        <nav class="nav-breadcrumb">
+            <a href="index.html">首頁</a> &gt; <a href="meta-ads-tactics-overview.html">廣告投手策略總整理</a> &gt; 擴量與再行銷
+        </nav>
+
+        <section class="summary">
+            廣告投手在面對廣告表現穩定後，最重要的任務就是擴量與提升整體 ROAS。本篇將從 Meta 廣告平台中常見的預算放大策略、再行銷結構優化與封閉式轉換流程出發，協助你建構可自我強化的廣告漏斗。適合應用於各類電商、課程、金融與高客單產品推廣場景。
+        </section>
+
+        <h2>一美元引爆法與預算階梯拉升技術</h2>
+
+        <p>許多廣告帳號卡在預算提升時成效衰退的困境，主要原因來自演算法學習期重置與流量錯配。以下兩招是實戰中證明有效的放量技巧：</p>
+
+        <div class="strategy-box">
+            <h3><strong>一美元引爆法</strong></h3>
+            <ul>
+                <li><strong>原理：</strong>以1美元小額廣告通過審核並測試點擊率後，快速複製多則相同廣告，在同一廣告組中堆疊，拉高學習權重。</li>
+                <li><strong>執行建議：</strong>當發現某一素材初期 CTR 過 2%，可立即以此素材大量複製掛載，並將廣告組日預算調至可承受上限。</li>
+            </ul>
+        </div>
+
+        <div class="strategy-box">
+            <h3><strong>階梯式預算拉升法</strong></h3>
+            <ul>
+                <li><strong>操作：</strong>每隔 6–12 小時按比例增加預算（如 50% → 75% → 100%），讓演算法持續擴大優質流量而不進入新學習期。</li>
+            </ul>
+        </div>
+
+        <div class="faq-section">
+            <h3>FAQ：</h3>
+            <div class="faq-item">
+                <strong>Q：何時可以啟動拉升？</strong><br>
+                A：觀察 3 小時內點擊率穩定並轉換持續進帳時，為最佳黃金擴量時機。
+            </div>
+        </div>
+
+        <h2>封閉式再行銷漏斗設計</h2>
+
+        <p>開放式流量導入若無再行銷，等於只打一槍就放棄。成功的廣告擴量需搭配「封閉式再行銷漏斗」，以多層次回收尚未轉換用戶。</p>
+
+        <div class="funnel-structure">
+            <h3><span class="emoji-icon">🔁</span>常見三層結構：</h3>
+            
+            <div class="funnel-layer">
+                <h4>1. 外圈導入</h4>
+                <p>引起興趣的廣告導入首頁、影片或資訊頁（非銷售頁）。</p>
+            </div>
+            
+            <div class="funnel-layer">
+                <h4>2. 中圈認知</h4>
+                <p>以再行銷投放社交證明、真實開箱、限時優惠等素材，鎖定有互動/停留者。</p>
+            </div>
+            
+            <div class="funnel-layer">
+                <h4>3. 內圈轉換</h4>
+                <p>針對加購未結帳、點擊未填表者，使用限量名額/預約截止等 CTA 再行銷強催單。</p>
+            </div>
+        </div>
+
+        <div class="highlight-tip">
+            <strong>💡 提醒：</strong>再行銷活動建議獨立為一個廣告系列，以便精準追蹤其成效與 ROAS。
+        </div>
+
+        <div class="faq-section">
+            <h3>FAQ：</h3>
+            <div class="faq-item">
+                <strong>Q：為什麼不直接一開始就投轉換頁？</strong><br>
+                A：直接投轉換頁會造成低意圖用戶流失，封閉漏斗讓不同溫度用戶分層處理，可提升整體轉換率與 ROAS。
+            </div>
+        </div>
+
+        <h2>再行銷名單來源與轉換 API 串接關鍵</h2>
+
+        <p>優質再行銷成效仰賴「名單真實性」，而非單靠像素點擊事件。</p>
+
+        <div class="strategy-box">
+            <h3><span class="emoji-icon">📌</span>建議串接方式：</h3>
+            <ul>
+                <li><strong>Pixel＋轉換 API 串接：</strong>同步回傳網站、後台、LINE、電話等真實成交紀錄，降低假名單干擾。</li>
+                <li><strong>CRM 名單回傳：</strong>將表單填寫名單、已購客戶定期回傳 Meta 系統建立排除與類似受眾。</li>
+            </ul>
+        </div>
+
+        <div class="metrics-box">
+            <h4><span class="emoji-icon">📊</span>評估指標：</h4>
+            <p>轉換 API 事件與 Pixel 事件匹配度 >70%，可視為資料一致性良好。</p>
+        </div>
+
+        <div class="faq-section">
+            <h3>FAQ：</h3>
+            <div class="faq-item">
+                <strong>Q：CAPI 串接一定需要工程師嗎？</strong><br>
+                A：若使用 WordPress、Shopify 等平台，可透過插件串接，無需寫程式。
+            </div>
+        </div>
+
+        <h2>廣告擴量的風險控管與觀測指標</h2>
+
+        <p>在放量過程中應密切觀察：</p>
+
+        <ul>
+            <li>CTR是否下降（<1% 代表素材疲勞）</li>
+            <li>CPA是否飆升（比平均成本高出 30% 則應減量）</li>
+            <li>預算使用率是否平穩（若掉至 50% 以下可能為學習期或競價問題）</li>
+        </ul>
+
+        <div class="tool-recommendation">
+            <h3><span class="emoji-icon">⚙️</span>工具建議：</h3>
+            <ul>
+                <li>設定自動規則（如 CPA 超過 250 元即降低預算）</li>
+                <li>使用「機會分數」檢查廣告組健康狀況</li>
+            </ul>
+        </div>
+
+        <div class="faq-section">
+            <h3>FAQ：</h3>
+            <div class="faq-item">
+                <strong>Q：是否可在放量同時嘗試其他素材？</strong><br>
+                A：建議以 80/20 原則運用預算：80% 用於最佳素材放量，20% 測試新創意，確保放量不中斷。
+            </div>
+        </div>
+
+        <div class="next-steps">
+            <h2>下一步推薦</h2>
+            <p>📘 延伸閱讀：</p>
+            <ul>
+                <li><a href="ads-tactics-basic.html">《Meta 廣告學習期突破策略》</a></li>
+                <li><a href="ads-creatives-social.html">《Post ID 與留言誘導整合操作攻略》</a></li>
+            </ul>
+            <p>📥 免費下載：<br>
+            《廣告擴量與再行銷完全指南 PDF》</p>
+        </div>
+
+        <nav class="nav-links">
+            <a href="ads-creatives-social.html">← 上一篇：素材與互動</a>
+            <a href="meta-ads-tactics-overview.html">返回總覽 →</a>
+        </nav>
+    </div>
+</body>
+</html>

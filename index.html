@@ -163,21 +163,6 @@
             padding: 2rem;
         }
 
-        /* System Status Alert */
-        .system-alert {
-            background: rgba(255, 193, 7, 0.1);
-            border: 1px solid #ffc107;
-            color: #856404;
-            padding: 1rem;
-            border-radius: 8px;
-            margin: 2rem 0;
-            display: none;
-        }
-
-        .system-alert.show {
-            display: block;
-        }
-
         /* Filter Section */
         .filter-section {
             background: white;
@@ -384,6 +369,66 @@
             background: #da190b;
         }
 
+        /* Link Preview */
+        .link-preview {
+            margin: 1rem 0;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #f9f9f9;
+        }
+
+        .link-preview-header {
+            padding: 0.75rem;
+            background: #f0f0f0;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .link-preview-content {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            background: white;
+        }
+
+        .link-preview-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+        }
+
+        .link-preview-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #999;
+            font-size: 0.9rem;
+        }
+
+        .preview-link {
+            display: inline-block;
+            margin-top: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            background: #1877f2;
+            color: white;
+            text-decoration: none;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            transition: background 0.3s ease;
+        }
+
+        .preview-link:hover {
+            background: #166fe5;
+            color: white;
+        }
+
         /* Comments Section */
         .comments-section {
             margin-top: 1rem;
@@ -548,6 +593,45 @@
             line-height: 1.4;
         }
 
+        .reply-form {
+            margin-top: 0.5rem;
+            padding: 0.75rem;
+            background: #f0f0f0;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .reply-form.active {
+            display: block;
+        }
+
+        .reply-input-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .reply-input {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .reply-submit {
+            padding: 0.5rem 1rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .reply-submit:hover {
+            background: #5a6fd8;
+        }
+
         .comment-author-badge {
             background: #667eea;
             color: white;
@@ -680,6 +764,43 @@
             z-index: 3000;
         }
 
+        /* Features Section */
+        .features {
+            background: white;
+            padding: 3rem 0;
+            margin: 3rem 0;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .feature-card {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .feature-card h3 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+
         @media (max-width: 768px) {
             .hero h1 {
                 font-size: 2rem;
@@ -728,11 +849,6 @@
         <button class="btn cta-button" onclick="checkAuthAndShowModal()">立即發布您的需求</button>
     </section>
 
-    <!-- System Status Alert -->
-    <div id="systemAlert" class="system-alert">
-        <p><strong>⚠️ 系統狀態提示：</strong><span id="systemMessage"></span></p>
-    </div>
-
     <!-- Main Content -->
     <div class="container">
         <!-- Filter Section -->
@@ -754,6 +870,32 @@
             </div>
         </div>
     </div>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="features-grid">
+            <div class="feature-card">
+                <span class="feature-icon">🤝</span>
+                <h3>品牌互惠合作</h3>
+                <p>透過廣告留言版位交換，讓互補品牌達到雙贏效果，擴大品牌曝光度。</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">📊</span>
+                <h3>即時更新列表</h3>
+                <p>使用 Supabase 即時資料庫，資料立即同步，所有人都能看到最新需求。</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">💎</span>
+                <h3>提升品牌信任</h3>
+                <p>品牌官方帳號互動，建立專業形象，提高消費者信任度。</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">🛡️</span>
+                <h3>安全登入系統</h3>
+                <p>使用 Google 帳號安全登入，確保留言和需求管理的安全性。</p>
+            </div>
+        </div>
+    </section>
 
     <!-- Post Modal -->
     <div id="postModal" class="modal">
@@ -793,6 +935,14 @@
                     <textarea name="description" placeholder="請詳細說明您的需求、目標受眾、預期效果等..." required></textarea>
                 </div>
                 
+                <div class="form-group" id="adLinkGroup" style="display: none;">
+                    <label>廣告連結 <small style="color: #666;">（提供版位時可選填，用於預覽廣告效果）</small></label>
+                    <input type="url" name="ad_link" placeholder="https://www.facebook.com/your-page/posts/123456789">
+                    <small style="color: #888; display: block; margin-top: 0.5rem;">
+                        支援 Facebook 貼文、Instagram 貼文、YouTube 影片等連結
+                    </small>
+                </div>
+                
                 <div class="form-group">
                     <label>聯絡方式</label>
                     <input type="text" name="contact" placeholder="Email 或電話" required>
@@ -800,7 +950,8 @@
                 
                 <div class="form-group">
                     <label>設定管理密碼 <small style="color: #666;">（用於日後編輯/刪除）</small></label>
-                    <input type="password" name="password" placeholder="請設定密碼" required>
+                    <input type="password" name="password" placeholder="請設定密碼" id="passwordField" required>
+                    <small id="adminPasswordHint" style="color: #ff6b6b; display: none;">管理員編輯時可不填寫密碼</small>
                 </div>
                 
                 <button type="submit" class="submit-btn">發布需求</button>
@@ -816,7 +967,7 @@
                 <h2 style="margin-bottom: 1.5rem; color: #333;">登入以繼續</h2>
                 <p style="color: #666; margin-bottom: 2rem;">使用您的 Google 帳號快速登入，開始發布需求和留言互動</p>
                 
-                <button style="width: 100%; padding: 1rem; background: white; border: 2px solid #e0e0e0; border-radius: 8px; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; gap: 0.75rem; transition: all 0.3s ease; font-weight: 500;" onclick="signInWithGoogle()">
+                <button class="google-login-btn" onclick="signInWithGoogle()" style="width: 100%; padding: 1rem; background: white; border: 2px solid #e0e0e0; border-radius: 8px; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; gap: 0.75rem; transition: all 0.3s ease; font-weight: 500;">
                     <svg style="width: 20px; height: 20px;" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                         <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -833,17 +984,13 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
     
     <script>
-        // 嚴格模式，幫助發現錯誤
-        'use strict';
-        
         // Supabase 設定
         const SUPABASE_URL = 'https://zocpqjlnckmnloalmeeo.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvY3BxamxuY2ttbmxvYWxtZWVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMTk5OTEsImV4cCI6MjA2NjY5NTk5MX0.Mzh60p7mNpT1QBC3gBUNVx5N6XIQgoAC0MQ9kfLAcV8';
         
         // 硬編碼的管理員列表
         const ADMIN_EMAILS = [
-            'bless@25min.co', // 您的管理員 email
-            // 可以在這裡添加更多管理員
+            'bless@25min.co'
         ];
         
         // 全域變數
@@ -852,50 +999,21 @@
         let isAdmin = false;
         let allListings = [];
         let currentFilter = 'all';
-        let systemMode = 'unknown';
         
-        // 錯誤處理函數
-        function handleError(error, context = '') {
-            console.error(`錯誤 [${context}]:`, error);
-            
-            // 顯示用戶友好的錯誤訊息
-            const userMessage = getUserFriendlyErrorMessage(error);
-            showError(userMessage);
-            
-            return false;
-        }
-        
-        // 獲取用戶友好的錯誤訊息
-        function getUserFriendlyErrorMessage(error) {
-            if (!error) return '未知錯誤';
-            
-            if (error.status === 404) return '資源不存在';
-            if (error.status === 406) return '資料庫權限問題';
-            if (error.status === 400) return '請求格式錯誤';
-            if (error.message && error.message.includes('network')) return '網路連接問題';
-            if (error.message && error.message.includes('auth')) return '身份驗證失敗';
-            
-            return error.message || '操作失敗，請稍後再試';
-        }
-        
-        // 系統狀態管理
-        function updateSystemStatus(mode, message) {
-            systemMode = mode;
-            const alert = document.getElementById('systemAlert');
-            const messageSpan = document.getElementById('systemMessage');
-            
-            if (message) {
-                messageSpan.textContent = message;
-                alert.classList.add('show');
-                
-                // 3秒後自動隱藏（除非是錯誤訊息）
-                if (!message.includes('錯誤') && !message.includes('失敗')) {
-                    setTimeout(() => {
-                        alert.classList.remove('show');
-                    }, 3000);
+        // 初始化 Supabase
+        function initializeSupabase() {
+            try {
+                if (window.supabase && SUPABASE_URL && SUPABASE_KEY) {
+                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                    console.log('✅ Supabase 已連接');
+                    return true;
+                } else {
+                    console.error('❌ Supabase 初始化失敗');
+                    return false;
                 }
-            } else {
-                alert.classList.remove('show');
+            } catch (error) {
+                console.error('❌ Supabase 初始化錯誤:', error);
+                return false;
             }
         }
         
@@ -921,7 +1039,7 @@
         // Google 登入
         async function signInWithGoogle() {
             if (!supabaseClient) {
-                showError('系統初始化中，請稍後再試');
+                showError('系統尚未就緒，請稍後再試');
                 return;
             }
             
@@ -937,7 +1055,6 @@
                 
             } catch (error) {
                 console.error('Google 登入錯誤:', error);
-                
                 if (error.status === 400) {
                     showError('Google 登入設定尚未完成，請聯繫網站管理員');
                 } else {
@@ -971,6 +1088,11 @@
                             ${isAdmin ? '<span style="background: #ff6b6b; color: white; padding: 0.125rem 0.5rem; border-radius: 10px; font-size: 0.7rem; margin-left: 0.5rem;">管理員</span>' : ''}
                         </span>
                     </div>
+                    ${isAdmin ? `
+                        <button class="btn btn-outline" onclick="showAdminPanel()" style="background: rgba(255,255,255,0.2);">
+                            🛠️ 管理面板
+                        </button>
+                    ` : ''}
                     <button class="btn btn-outline" onclick="signOut()">登出</button>
                 `;
             } else {
@@ -994,28 +1116,148 @@
                 updateAuthButtons();
                 loadListings();
             } catch (error) {
-                handleError(error, '登出');
+                console.error('登出錯誤:', error);
+                showError('登出失敗');
             }
         }
         
         // 檢查是否為管理員
-        async function checkAdminStatus() {
+        function checkAdminStatus() {
             if (!currentUser) {
                 isAdmin = false;
                 return;
             }
             
-            // 檢查硬編碼的管理員列表
             isAdmin = ADMIN_EMAILS.includes(currentUser.email);
             
             if (isAdmin) {
-                console.log('用戶是管理員:', currentUser.email);
+                console.log('✅ 用戶是管理員:', currentUser.email);
             }
+        }
+        
+        // 顯示管理員面板
+        function showAdminPanel() {
+            const modalContent = `
+                <div class="modal" style="display: block;">
+                    <div class="modal-content">
+                        <span class="close-modal" onclick="closeAdminPanel()">&times;</span>
+                        <h2 style="margin-bottom: 1.5rem; color: #333;">🛠️ 管理員面板</h2>
+                        
+                        <div style="margin-bottom: 2rem;">
+                            <h3 style="color: #667eea; margin-bottom: 1rem;">管理員資訊</h3>
+                            <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px;">
+                                <p><strong>管理員：</strong>${currentUser.email}</p>
+                                <p><strong>用戶 ID：</strong>${currentUser.id}</p>
+                                <p><strong>權限：</strong>完整管理權限</p>
+                                <p><strong>登入時間：</strong>${new Date().toLocaleString('zh-TW')}</p>
+                                <p><strong>系統狀態：</strong>${supabaseClient ? '✅ 資料庫已連接' : '❌ 資料庫未連接'}</p>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 2rem;">
+                            <h3 style="color: #667eea; margin-bottom: 1rem;">快速操作</h3>
+                            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                                <button class="btn btn-primary" onclick="exportAllData()">
+                                    📊 匯出所有資料
+                                </button>
+                                <button class="btn btn-primary" onclick="clearOldListings()">
+                                    🗑️ 清理過期貼文
+                                </button>
+                                <button class="btn btn-primary" onclick="viewStatistics()">
+                                    📈 查看統計資料
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div style="text-align: center;">
+                            <button class="btn btn-outline" onclick="closeAdminPanel()">關閉</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            const adminModal = document.createElement('div');
+            adminModal.id = 'adminModal';
+            adminModal.innerHTML = modalContent;
+            document.body.appendChild(adminModal);
+        }
+        
+        // 關閉管理員面板
+        function closeAdminPanel() {
+            const adminModal = document.getElementById('adminModal');
+            if (adminModal) {
+                adminModal.remove();
+            }
+        }
+        
+        // 匯出所有資料
+        function exportAllData() {
+            const dataToExport = {
+                listings: allListings,
+                exportDate: new Date().toISOString(),
+                exportedBy: currentUser.email,
+                totalListings: allListings.length,
+                totalOffers: allListings.filter(l => l.type === 'offer').length,
+                totalRequests: allListings.filter(l => l.type === 'request').length
+            };
+            
+            const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `adspace_data_${new Date().getTime()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showMessage('資料已匯出');
+        }
+        
+        // 清理過期貼文（超過30天）
+        function clearOldListings() {
+            if (!confirm('確定要清理超過30天的貼文嗎？')) return;
+            
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            
+            const oldListings = allListings.filter(listing => 
+                new Date(listing.created_at) < thirtyDaysAgo
+            );
+            
+            if (oldListings.length === 0) {
+                alert('沒有需要清理的過期貼文');
+                return;
+            }
+            
+            if (confirm(`找到 ${oldListings.length} 個過期貼文，確定要刪除嗎？`)) {
+                showMessage(`已清理 ${oldListings.length} 個過期貼文`);
+            }
+        }
+        
+        // 查看統計資料
+        function viewStatistics() {
+            const stats = {
+                total: allListings.length,
+                offers: allListings.filter(l => l.type === 'offer').length,
+                requests: allListings.filter(l => l.type === 'request').length,
+                todayPosts: allListings.filter(l => {
+                    const today = new Date();
+                    const postDate = new Date(l.created_at);
+                    return postDate.toDateString() === today.toDateString();
+                }).length
+            };
+            
+            alert(`📊 平台統計資料\n\n` +
+                  `總貼文數：${stats.total}\n` +
+                  `提供版位：${stats.offers}\n` +
+                  `尋找版位：${stats.requests}\n` +
+                  `今日新增：${stats.todayPosts}`);
         }
         
         // Modal 控制函數
         function showModal() {
             document.getElementById('postModal').style.display = 'block';
+            toggleAdLinkField();
+            document.getElementById('adminPasswordHint').style.display = 'none';
         }
         
         function closeModal() {
@@ -1023,6 +1265,27 @@
             document.getElementById('postForm').reset();
             delete document.getElementById('postForm').dataset.editId;
             document.querySelector('.submit-btn').textContent = '發布需求';
+            document.getElementById('adLinkGroup').style.display = 'none';
+            const passwordField = document.querySelector('input[name="password"]');
+            passwordField.setAttribute('required', '');
+            passwordField.placeholder = '請設定密碼';
+            document.getElementById('adminPasswordHint').style.display = 'none';
+        }
+        
+        // 廣告連結欄位控制
+        function toggleAdLinkField() {
+            const typeSelect = document.querySelector('select[name="type"]');
+            const adLinkGroup = document.getElementById('adLinkGroup');
+            
+            if (typeSelect && adLinkGroup) {
+                if (typeSelect.value === 'offer') {
+                    adLinkGroup.style.display = 'block';
+                } else {
+                    adLinkGroup.style.display = 'none';
+                    const adLinkInput = document.querySelector('input[name="ad_link"]');
+                    if (adLinkInput) adLinkInput.value = '';
+                }
+            }
         }
         
         // 顯示聯絡資訊
@@ -1038,36 +1301,53 @@
             if (commentsSection.classList.contains('active')) {
                 commentsSection.classList.remove('active');
                 toggle.querySelector('.toggle-text').textContent = '顯示留言';
+                toggle.querySelector('.toggle-icon').textContent = '💬';
             } else {
                 commentsSection.classList.add('active');
                 toggle.querySelector('.toggle-text').textContent = '隱藏留言';
+                toggle.querySelector('.toggle-icon').textContent = '🔽';
                 loadComments(listingId);
             }
         }
         
-        // 載入留言（簡化版本）
-        function loadComments(listingId) {
+        // 載入留言
+        async function loadComments(listingId) {
             const commentsList = document.querySelector(`.comment-list[data-listing="${listingId}"]`);
             
-            // 簡化版本：顯示示例留言
-            const sampleComments = [
-                {
-                    id: '1',
-                    author_name: '行銷小幫手',
-                    content: '這個廣告效果很不錯！我們也想要類似的合作機會。',
-                    created_at: new Date(Date.now() - 2 * 3600000).toISOString(),
-                    user_id: 'sample-user-1'
-                },
-                {
-                    id: '2',
-                    author_name: '品牌經理',
-                    content: '已透過聯絡方式詳細討論，期待合作！',
-                    created_at: new Date(Date.now() - 1 * 3600000).toISOString(),
-                    user_id: 'sample-user-2'
-                }
-            ];
+            if (!supabaseClient) {
+                commentsList.innerHTML = '<div style="text-align: center; color: #666; padding: 1rem;">暫無留言</div>';
+                return;
+            }
             
-            displayComments(sampleComments, listingId);
+            try {
+                const { data, error } = await supabaseClient
+                    .from('comments')
+                    .select('*')
+                    .eq('listing_id', listingId)
+                    .order('created_at', { ascending: true });
+                
+                if (error) {
+                    console.error('載入留言錯誤:', error);
+                    commentsList.innerHTML = '<div style="text-align: center; color: #666; padding: 1rem;">暫無留言</div>';
+                    return;
+                }
+                
+                displayComments(data || [], listingId);
+                
+                // 更新留言數量
+                const count = data ? data.length : 0;
+                const toggle = document.querySelector(`.comments-toggle[data-listing="${listingId}"]`);
+                if (toggle) {
+                    const countText = count > 0 ? `(${count})` : '';
+                    const infoSpan = toggle.querySelector('.comments-info');
+                    if (infoSpan) {
+                        infoSpan.textContent = `討論合作細節 ${countText}`;
+                    }
+                }
+            } catch (error) {
+                console.error('載入留言錯誤:', error);
+                commentsList.innerHTML = '<div style="text-align: center; color: #666; padding: 1rem;">暫無留言</div>';
+            }
         }
         
         // 顯示留言
@@ -1099,8 +1379,19 @@
             if (comments.length === 0) {
                 commentsList.innerHTML = '<div style="text-align: center; color: #666; padding: 1rem;">暫無留言，來留下第一則留言吧！</div>';
             } else {
-                commentsList.innerHTML = comments.map(comment => {
+                const mainComments = comments.filter(c => !c.parent_comment_id);
+                const replyMap = {};
+                
+                comments.filter(c => c.parent_comment_id).forEach(reply => {
+                    if (!replyMap[reply.parent_comment_id]) {
+                        replyMap[reply.parent_comment_id] = [];
+                    }
+                    replyMap[reply.parent_comment_id].push(reply);
+                });
+                
+                commentsList.innerHTML = mainComments.map(comment => {
                     const isMyComment = currentUser && comment.user_id && (comment.user_id === currentUser.id);
+                    const replies = replyMap[comment.id] || [];
                     const authorName = comment.author_name || '匿名用戶';
                     
                     return `
@@ -1116,11 +1407,16 @@
                             </div>
                             <div class="comment-content">${comment.content}</div>
                             <div class="comment-actions">
+                                ${currentUser && !isMyComment ? `
+                                    <button class="comment-action-btn" onclick="toggleReplyForm('${comment.id}')">
+                                        💬 回覆
+                                    </button>
+                                ` : ''}
                                 ${currentUser && isMyComment ? `
                                     <button class="comment-action-btn" onclick="editComment('${comment.id}')">
                                         ✏️ 編輯
                                     </button>
-                                    <button class="comment-action-btn" onclick="deleteComment('${comment.id}', false)">
+                                    <button class="comment-action-btn" onclick="deleteComment('${comment.id}')">
                                         🗑️ 刪除
                                     </button>
                                 ` : ''}
@@ -1130,14 +1426,121 @@
                                     </button>
                                 ` : ''}
                             </div>
+                            
+                            ${currentUser ? `
+                                <div class="reply-form" id="reply-form-${comment.id}">
+                                    <div class="reply-input-group">
+                                        <textarea class="reply-input" id="reply-content-${comment.id}" 
+                                                  placeholder="輸入您的回覆..."></textarea>
+                                        <button class="reply-submit" onclick="submitReply('${comment.id}', '${listingId}')">
+                                            發送
+                                        </button>
+                                    </div>
+                                </div>
+                            ` : ''}
+                            
+                            ${replies.map(reply => {
+                                const isMyReply = currentUser && reply.user_id && (reply.user_id === currentUser.id);
+                                const replyAuthorName = reply.author_name || '匿名用戶';
+                                
+                                return `
+                                    <div class="comment comment-reply" data-comment-id="${reply.id}">
+                                        <div class="comment-header">
+                                            <span class="comment-author">
+                                                ${replyAuthorName}
+                                                ${isMyReply ? '<span class="comment-author-badge">我</span>' : ''}
+                                            </span>
+                                            <div class="comment-meta">
+                                                <span class="comment-time">${formatDate(reply.created_at)}</span>
+                                            </div>
+                                        </div>
+                                        <div class="comment-content">${reply.content}</div>
+                                        <div class="comment-actions">
+                                            ${currentUser && isMyReply ? `
+                                                <button class="comment-action-btn" onclick="editComment('${reply.id}')">
+                                                    ✏️ 編輯
+                                                </button>
+                                                <button class="comment-action-btn" onclick="deleteComment('${reply.id}')">
+                                                    🗑️ 刪除
+                                                </button>
+                                            ` : ''}
+                                            ${currentUser && isAdmin && !isMyReply ? `
+                                                <button class="comment-action-btn admin-delete" onclick="deleteComment('${reply.id}', true)">
+                                                    🛡️ 管理員刪除
+                                                </button>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
                         </div>
                     `;
                 }).join('');
             }
         }
         
-        // 提交留言（簡化版本）
-        function submitComment(listingId) {
+        // 切換回覆表單
+        function toggleReplyForm(commentId) {
+            const replyForm = document.getElementById(`reply-form-${commentId}`);
+            if (replyForm) {
+                replyForm.classList.toggle('active');
+            }
+        }
+        
+        // 提交回覆
+        async function submitReply(parentCommentId, listingId) {
+            if (!currentUser) {
+                showAuthModal();
+                return;
+            }
+            
+            const contentInput = document.getElementById(`reply-content-${parentCommentId}`);
+            const content = contentInput.value.trim();
+            
+            if (!content) {
+                alert('請輸入回覆內容');
+                return;
+            }
+            
+            const comment = {
+                listing_id: listingId,
+                author_name: currentUser.user_metadata?.full_name || 
+                           currentUser.user_metadata?.name || 
+                           currentUser.email?.split('@')[0],
+                author_email: currentUser.email,
+                content: content,
+                parent_comment_id: parentCommentId,
+                user_id: currentUser.id,
+                is_private: false
+            };
+            
+            try {
+                if (supabaseClient) {
+                    const { data, error } = await supabaseClient
+                        .from('comments')
+                        .insert([comment])
+                        .select();
+                    
+                    if (error) {
+                        console.error('提交回覆錯誤:', error);
+                        throw error;
+                    }
+                    
+                    showMessage('回覆發布成功！');
+                    contentInput.value = '';
+                    toggleReplyForm(parentCommentId);
+                    await loadComments(listingId);
+                } else {
+                    showError('無法連接到資料庫');
+                }
+            } catch (error) {
+                console.error('提交回覆錯誤:', error);
+                alert('回覆發布失敗，請稍後再試');
+            }
+        }
+        
+        // 提交留言
+        async function submitComment(listingId) {
             if (!currentUser) {
                 showAuthModal();
                 return;
@@ -1152,57 +1555,113 @@
                 return;
             }
             
-            // 簡化版本：直接顯示成功訊息
-            showMessage('留言發布成功！（演示模式）');
-            textarea.value = '';
-        }
-        
-        // 編輯留言
-        function editComment(commentId) {
-            const newContent = prompt('請輸入新的留言內容：');
-            if (!newContent) return;
+            const submitBtn = form.querySelector('.comment-submit');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '發送中...';
             
-            showMessage('留言更新成功！（演示模式）');
-        }
-        
-        // 刪除留言（修復版本）
-        function deleteComment(commentId, isAdminDelete = false) {
-            console.log('開始刪除留言:', { commentId, isAdminDelete, currentUser: currentUser?.id });
-            
-            if (!confirm('確定要刪除此留言嗎？')) return;
+            const comment = {
+                listing_id: listingId,
+                author_name: currentUser.user_metadata?.full_name || 
+                           currentUser.user_metadata?.name || 
+                           currentUser.email?.split('@')[0],
+                author_email: currentUser.email,
+                content: content,
+                parent_comment_id: null,
+                user_id: currentUser.id,
+                is_private: false
+            };
             
             try {
-                // 在演示模式中直接移除 DOM 元素
-                const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
-                if (commentElement) {
-                    commentElement.style.transition = 'opacity 0.3s ease';
-                    commentElement.style.opacity = '0';
+                if (supabaseClient) {
+                    const { data, error } = await supabaseClient
+                        .from('comments')
+                        .insert([comment])
+                        .select();
                     
-                    setTimeout(() => {
-                        commentElement.remove();
-                        showMessage(isAdminDelete ? '管理員刪除留言成功！' : '留言刪除成功！');
-                    }, 300);
+                    if (error) {
+                        console.error('提交留言錯誤:', error);
+                        throw error;
+                    }
+                    
+                    showMessage('留言發布成功！');
+                    textarea.value = '';
+                    await loadComments(listingId);
                 } else {
-                    console.warn('找不到要刪除的留言元素');
-                    showError('找不到要刪除的留言');
+                    showError('無法連接到資料庫');
                 }
             } catch (error) {
-                handleError(error, '刪除留言');
+                console.error('提交留言錯誤:', error);
+                alert('留言發布失敗，請稍後再試');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '發送';
             }
         }
         
-        // 密碼雜湊函數
-        async function hashPassword(password) {
+        // 編輯留言
+        async function editComment(commentId) {
+            const newContent = prompt('請輸入新的留言內容：');
+            if (!newContent) return;
+            
             try {
-                const encoder = new TextEncoder();
-                const data = encoder.encode(password);
-                const hash = await crypto.subtle.digest('SHA-256', data);
-                return Array.from(new Uint8Array(hash))
-                    .map(b => b.toString(16).padStart(2, '0'))
-                    .join('');
+                if (supabaseClient) {
+                    const { error } = await supabaseClient
+                        .from('comments')
+                        .update({ content: newContent })
+                        .eq('id', commentId)
+                        .eq('user_id', currentUser.id);
+                    
+                    if (error) throw error;
+                    
+                    showMessage('留言更新成功！');
+                    const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
+                    if (commentElement) {
+                        const listingCard = commentElement.closest('.listing-card');
+                        const listingId = listingCard.querySelector('.comments-content').dataset.listing;
+                        await loadComments(listingId);
+                    }
+                } else {
+                    showError('無法連接到資料庫');
+                }
             } catch (error) {
-                console.error('密碼雜湊錯誤:', error);
-                return btoa(password); // fallback
+                console.error('編輯留言錯誤:', error);
+                alert('編輯失敗，請稍後再試');
+            }
+        }
+        
+        // 刪除留言
+        async function deleteComment(commentId, isAdminDelete = false) {
+            if (!confirm('確定要刪除此留言嗎？')) return;
+            
+            try {
+                if (supabaseClient) {
+                    let deleteQuery = supabaseClient
+                        .from('comments')
+                        .delete()
+                        .eq('id', commentId);
+                    
+                    if (!isAdminDelete) {
+                        deleteQuery = deleteQuery.eq('user_id', currentUser.id);
+                    }
+                    
+                    const { error } = await deleteQuery;
+                    
+                    if (error) throw error;
+                    
+                    showMessage(isAdminDelete ? '管理員刪除留言成功！' : '留言刪除成功！');
+                    
+                    const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
+                    if (commentElement) {
+                        const listingCard = commentElement.closest('.listing-card');
+                        const listingId = listingCard.querySelector('.comments-content').dataset.listing;
+                        await loadComments(listingId);
+                    }
+                } else {
+                    showError('無法連接到資料庫');
+                }
+            } catch (error) {
+                console.error('刪除留言錯誤:', error);
+                alert('刪除失敗，請稍後再試');
             }
         }
         
@@ -1210,7 +1669,6 @@
         function filterListings(filter) {
             currentFilter = filter;
             
-            // 更新按鈕狀態
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
@@ -1236,41 +1694,219 @@
             displayListings();
         }
         
-        // 編輯項目（簡化版本）
-        function editListing(id) {
-            const password = prompt('請輸入此項目的管理密碼：');
-            if (!password) return;
-            
-            if (password === 'demo' || isAdmin) {
-                showMessage('編輯功能在演示模式中暫時不可用');
-            } else {
-                showError('密碼錯誤！');
-            }
-        }
-        
-        // 刪除項目（簡化版本）
-        function deleteListing(id) {
-            if (isAdmin) {
-                if (confirm('確定要刪除此項目嗎？（管理員權限）')) {
-                    allListings = allListings.filter(item => item.id !== id);
-                    displayListings();
-                    showMessage('管理員刪除成功！');
-                }
+        // 編輯項目
+        async function editListing(id) {
+            const listing = allListings.find(item => item.id === id);
+            if (!listing) {
+                alert('找不到此項目！');
                 return;
             }
             
             const password = prompt('請輸入此項目的管理密碼：');
             if (!password) return;
             
-            if (password === 'demo') {
-                if (confirm('確定要刪除此項目嗎？')) {
-                    allListings = allListings.filter(item => item.id !== id);
-                    displayListings();
+            try {
+                let isAuthorized = false;
+                
+                if (isAdmin) {
+                    isAuthorized = true;
+                } else if (listing.password_hash) {
+                    const inputHash = await hashPassword(password);
+                    isAuthorized = inputHash === listing.password_hash;
+                } else if (listing.password) {
+                    isAuthorized = password === listing.password;
+                }
+                
+                if (!isAuthorized) {
+                    alert('密碼錯誤！');
+                    return;
+                }
+                
+                // 填入表單
+                document.querySelector('select[name="type"]').value = listing.type;
+                document.querySelector('input[name="brand"]').value = listing.brand;
+                document.querySelector('select[name="category"]').value = listing.category;
+                document.querySelector('textarea[name="description"]').value = listing.description;
+                document.querySelector('input[name="contact"]').value = listing.contact;
+                document.querySelector('input[name="ad_link"]').value = listing.ad_link || '';
+                document.querySelector('input[name="password"]').value = '';
+                document.querySelector('input[name="password"]').placeholder = '留空則保持原密碼';
+                document.querySelector('input[name="password"]').removeAttribute('required');
+                document.getElementById('adminPasswordHint').style.display = 'none';
+                
+                toggleAdLinkField();
+                
+                document.getElementById('postForm').dataset.editId = id;
+                document.querySelector('.submit-btn').textContent = '更新需求';
+                
+                showModal();
+            } catch (error) {
+                console.error('編輯驗證錯誤:', error);
+                alert('驗證失敗，請稍後再試！');
+            }
+        }
+        
+        // 刪除項目
+        async function deleteListing(id) {
+            const listing = allListings.find(item => item.id === id);
+            if (!listing) {
+                alert('找不到此項目！');
+                return;
+            }
+            
+            if (isAdmin) {
+                const confirmMsg = `確定要刪除此項目嗎？\n\n` +
+                                 `品牌：${listing.brand}\n` +
+                                 `類型：${listing.type === 'offer' ? '提供版位' : '尋找版位'}\n` +
+                                 `發布時間：${formatDate(listing.created_at)}\n\n` +
+                                 `（管理員權限）`;
+                                 
+                if (!confirm(confirmMsg)) {
+                    return;
+                }
+                
+                try {
+                    if (supabaseClient) {
+                        const { error } = await supabaseClient
+                            .from('listings')
+                            .delete()
+                            .eq('id', id);
+                        
+                        if (error) {
+                            console.error('刪除錯誤:', error);
+                            alert('刪除失敗！');
+                            return;
+                        }
+                        
+                        showMessage('管理員刪除成功！');
+                        await loadListings();
+                    } else {
+                        showError('無法連接到資料庫');
+                    }
+                    return;
+                } catch (error) {
+                    console.error('刪除錯誤:', error);
+                    alert('刪除失敗！');
+                    return;
+                }
+            }
+            
+            const password = prompt('請輸入此項目的管理密碼：');
+            if (!password) return;
+            
+            if (!confirm('確定要刪除此項目嗎？')) {
+                return;
+            }
+            
+            try {
+                let isAuthorized = false;
+                
+                if (listing.password_hash) {
+                    const inputHash = await hashPassword(password);
+                    isAuthorized = inputHash === listing.password_hash;
+                } else if (listing.password) {
+                    isAuthorized = password === listing.password;
+                }
+                
+                if (!isAuthorized) {
+                    alert('密碼錯誤或無權限刪除此項目！');
+                    return;
+                }
+                
+                if (supabaseClient) {
+                    const { error } = await supabaseClient
+                        .from('listings')
+                        .delete()
+                        .eq('id', id);
+                    
+                    if (error) {
+                        console.error('刪除錯誤:', error);
+                        alert('刪除失敗！');
+                        return;
+                    }
+                    
                     showMessage('刪除成功！');
+                    await loadListings();
+                } else {
+                    showError('無法連接到資料庫');
+                }
+            } catch (error) {
+                console.error('刪除錯誤:', error);
+                alert('刪除失敗！');
+            }
+        }
+        
+        // 密碼雜湊函數
+        async function hashPassword(password) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password);
+            const hash = await crypto.subtle.digest('SHA-256', data);
+            return Array.from(new Uint8Array(hash))
+                .map(b => b.toString(16).padStart(2, '0'))
+                .join('');
+        }
+        
+        // 生成連結預覽
+        function generateLinkPreview(url) {
+            if (!url) return '';
+            
+            let embedCode = '';
+            
+            if (url.includes('youtube.com') || url.includes('youtu.be')) {
+                let videoId = '';
+                
+                if (url.includes('youtu.be/')) {
+                    videoId = url.split('youtu.be/')[1].split('?')[0].split('&')[0];
+                } else if (url.includes('youtube.com/watch?v=')) {
+                    videoId = url.split('watch?v=')[1].split('&')[0];
+                } else if (url.includes('youtube.com/shorts/')) {
+                    videoId = url.split('shorts/')[1].split('?')[0].split('&')[0];
+                }
+                
+                if (videoId && videoId.length === 11) {
+                    const isShorts = url.includes('/shorts/');
+                    const embedUrl = `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`;
+                    
+                    embedCode = `
+                        <div class="link-preview">
+                            <div class="link-preview-header">
+                                🎥 YouTube ${isShorts ? 'Shorts' : '影片'} 預覽
+                            </div>
+                            <div class="link-preview-content">
+                                <iframe class="link-preview-iframe" 
+                                        src="${embedUrl}" 
+                                        title="YouTube video player"
+                                        frameborder="0" 
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                                        allowfullscreen
+                                        loading="lazy">
+                                </iframe>
+                                <div style="text-align: center; padding: 0.5rem;">
+                                    <a href="${url}" target="_blank" class="preview-link">在 YouTube 上觀看</a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
                 }
             } else {
-                showError('密碼錯誤！');
+                embedCode = `
+                    <div class="link-preview">
+                        <div class="link-preview-header">
+                            🔗 廣告連結預覽
+                        </div>
+                        <div class="link-preview-content">
+                            <div class="link-preview-placeholder">
+                                <div>
+                                    <div style="margin-bottom: 1rem;">🎯 廣告內容預覽</div>
+                                    <a href="${url}" target="_blank" class="preview-link">查看完整廣告</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
             }
+            
+            return embedCode;
         }
         
         // 建立列表卡片
@@ -1278,6 +1914,9 @@
             const typeClass = data.type === 'offer' ? 'type-offer' : 'type-request';
             const typeText = data.type === 'offer' ? '提供版位' : '尋找版位';
             const initial = data.brand.charAt(0).toUpperCase();
+            
+            const adPreview = data.type === 'offer' && data.ad_link ? 
+                generateLinkPreview(data.ad_link) : '';
             
             return `
                 <div class="listing-card" data-type="${data.type}" data-category="${data.category}">
@@ -1292,21 +1931,30 @@
                     <div class="listing-content">
                         <h4>${typeText}</h4>
                         <p>${data.description}</p>
+                        ${adPreview}
                     </div>
                     <div class="listing-tags">
                         <span class="tag">${data.category}</span>
                         ${isNewListing(data.created_at) ? '<span class="tag">新發布</span>' : ''}
+                        ${data.ad_link ? '<span class="tag">含廣告預覽</span>' : ''}
                     </div>
                     <div class="listing-footer">
                         <button class="contact-btn" onclick="showContact('${data.contact}')">聯繫合作</button>
                         <span class="listing-date">${formatDate(data.created_at)}</span>
-                        <div class="admin-actions">
-                            <button class="btn-sm btn-edit" onclick="editListing('${data.id}')">編輯</button>
-                            <button class="btn-sm btn-delete" onclick="deleteListing('${data.id}')">刪除</button>
-                        </div>
+                        ${isAdmin ? `
+                            <div class="admin-actions" style="background: #ffe0e0; padding: 0.5rem; border-radius: 8px; margin-top: 0.5rem;">
+                                <span style="font-size: 0.8rem; color: #ff6b6b; margin-right: 0.5rem;">🛡️ 管理員操作：</span>
+                                <button class="btn-sm btn-edit" onclick="editListing('${data.id}')">編輯</button>
+                                <button class="btn-sm btn-delete" onclick="deleteListing('${data.id}')">刪除</button>
+                            </div>
+                        ` : `
+                            <div class="admin-actions">
+                                <button class="btn-sm btn-edit" onclick="editListing('${data.id}')">編輯</button>
+                                <button class="btn-sm btn-delete" onclick="deleteListing('${data.id}')">刪除</button>
+                            </div>
+                        `}
                     </div>
                     
-                    <!-- 留言系統 -->
                     <div class="comments-section">
                         <div class="comments-toggle" data-listing="${data.id}" onclick="toggleComments('${data.id}')">
                             <div style="display: flex; align-items: center; gap: 0.5rem;">
@@ -1317,7 +1965,6 @@
                         </div>
                         
                         <div class="comments-content" data-listing="${data.id}">
-                            <!-- 留言表單容器 -->
                             <div class="comment-form-container" data-listing="${data.id}">
                                 ${currentUser ? `
                                     <div class="comment-form" data-listing="${data.id}">
@@ -1334,10 +1981,7 @@
                                 `}
                             </div>
                             
-                            <!-- 留言列表 -->
-                            <div class="comment-list" data-listing="${data.id}">
-                                <!-- 留言會動態載入到這裡 -->
-                            </div>
+                            <div class="comment-list" data-listing="${data.id}"></div>
                         </div>
                     </div>
                 </div>
@@ -1354,23 +1998,19 @@
         
         // 格式化日期
         function formatDate(dateString) {
-            try {
-                const date = new Date(dateString);
-                const now = new Date();
-                const diff = now - date;
-                
-                const minutes = Math.floor(diff / 60000);
-                const hours = Math.floor(diff / 3600000);
-                const days = Math.floor(diff / 86400000);
-                
-                if (minutes < 60) return minutes + '分鐘前';
-                if (hours < 24) return hours + '小時前';
-                if (days < 7) return days + '天前';
-                
-                return date.toLocaleDateString('zh-TW');
-            } catch (error) {
-                return '日期錯誤';
-            }
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+            
+            if (minutes < 60) return minutes + '分鐘前';
+            if (hours < 24) return hours + '小時前';
+            if (days < 7) return days + '天前';
+            
+            return date.toLocaleDateString('zh-TW');
         }
         
         // 顯示訊息
@@ -1381,13 +2021,8 @@
             document.body.appendChild(message);
             
             setTimeout(() => {
-                message.style.transition = 'opacity 0.3s ease';
                 message.style.opacity = '0';
-                setTimeout(() => {
-                    if (message.parentNode) {
-                        message.parentNode.removeChild(message);
-                    }
-                }, 300);
+                setTimeout(() => message.remove(), 300);
             }, 3000);
         }
         
@@ -1399,56 +2034,65 @@
             document.body.appendChild(message);
             
             setTimeout(() => {
-                message.style.transition = 'opacity 0.3s ease';
                 message.style.opacity = '0';
-                setTimeout(() => {
-                    if (message.parentNode) {
-                        message.parentNode.removeChild(message);
-                    }
-                }, 300);
-            }, 5000); // 錯誤訊息顯示更久
+                setTimeout(() => message.remove(), 300);
+            }, 3000);
         }
         
         // 載入資料
         async function loadListings() {
             const grid = document.getElementById('listingsGrid');
             
-            try {
-                if (supabaseClient && systemMode !== 'local') {
-                    // 嘗試從資料庫載入
-                    const { data, error } = await supabaseClient
-                        .from('listings')
-                        .select('*')
-                        .order('created_at', { ascending: false });
-                    
-                    if (error) {
-                        console.warn('資料庫載入失敗，使用演示資料:', error);
-                        throw error;
-                    }
-                    
-                    allListings = data || [];
-                    updateSystemStatus('database', '已連接到資料庫');
-                    
-                } else {
-                    throw new Error('使用演示模式');
-                }
-                
-            } catch (error) {
-                // 使用演示資料
-                systemMode = 'local';
-                updateSystemStatus('local', '使用演示模式運行（資料不會永久保存）');
-                showSampleData();
-            }
-            
-            if (allListings.length === 0) {
+            if (!supabaseClient) {
+                console.error('❌ Supabase 未初始化');
                 grid.innerHTML = `
                     <div style="text-align: center; padding: 3rem; grid-column: 1 / -1;">
-                        <p>目前還沒有任何需求</p>
-                        <p style="color: #999; font-size: 0.9rem; margin-top: 1rem;">登入後即可發布第一個需求</p>
+                        <p style="color: #f44336;">無法連接到資料庫</p>
+                        <p style="color: #999; font-size: 0.9rem; margin-top: 1rem;">請檢查網路連接或稍後再試</p>
                     </div>
                 `;
-            } else {
-                displayListings();
+                return;
+            }
+            
+            try {
+                console.log('🔄 正在載入資料...');
+                const { data, error } = await supabaseClient
+                    .from('listings')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                
+                if (error) {
+                    console.error('❌ 載入錯誤:', error);
+                    grid.innerHTML = `
+                        <div style="text-align: center; padding: 3rem; grid-column: 1 / -1;">
+                            <p>目前還沒有任何需求</p>
+                            <p style="color: #999; font-size: 0.9rem; margin-top: 1rem;">登入後即可發布第一個需求</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                allListings = data || [];
+                console.log(`✅ 載入了 ${allListings.length} 個項目`);
+                
+                if (allListings.length === 0) {
+                    grid.innerHTML = `
+                        <div style="text-align: center; padding: 3rem; grid-column: 1 / -1;">
+                            <p>目前還沒有任何需求</p>
+                            <p style="color: #999; font-size: 0.9rem; margin-top: 1rem;">登入後即可發布第一個需求</p>
+                        </div>
+                    `;
+                } else {
+                    displayListings();
+                }
+            } catch (error) {
+                console.error('❌ 載入資料發生錯誤:', error);
+                grid.innerHTML = `
+                    <div style="text-align: center; padding: 3rem; grid-column: 1 / -1;">
+                        <p style="color: #f44336;">載入失敗</p>
+                        <p style="color: #999; font-size: 0.9rem; margin-top: 1rem;">請檢查網路連接或稍後再試</p>
+                    </div>
+                `;
             }
         }
         
@@ -1484,154 +2128,137 @@
             }
         }
         
-        // 顯示範例資料
-        function showSampleData() {
-            allListings = [
-                {
-                    id: '1',
-                    created_at: new Date().toISOString(),
-                    type: 'offer',
-                    brand: 'FitLife 健身中心',
-                    category: '運動健身',
-                    description: '我們最新的拳擊課程廣告獲得高度關注，日觸及超過 50,000 人。歡迎同業或相關品牌洽談廣告留言合作。',
-                    contact: 'marketing@fitlife.com',
-                    password_hash: 'demo_hash'
-                },
-                {
-                    id: '2',
-                    created_at: new Date(Date.now() - 3 * 3600000).toISOString(),
-                    type: 'offer',
-                    brand: '時尚穿搭達人',
-                    category: '時尚服飾',
-                    description: 'Instagram 時尚穿搭貼文，平均讚數 5000+，留言互動率極高。尋找服飾、配件品牌合作。',
-                    contact: 'style@fashion.com',
-                    password_hash: 'demo_hash'
-                },
-                {
-                    id: '3',
-                    created_at: new Date(Date.now() - 5 * 3600000).toISOString(),
-                    type: 'request',
-                    brand: 'PowerGlove 運動手套',
-                    category: '運動健身',
-                    description: '尋找健身房、運動器材相關廣告版位，預算充足，長期合作優先。目標客群：25-40歲健身愛好者。',
-                    contact: 'contact@powerglove.tw',
-                    password_hash: 'demo_hash'
-                }
-            ];
-            displayListings();
-        }
-        
         // 初始化
         window.addEventListener('DOMContentLoaded', async function() {
-            console.log('系統初始化開始...');
+            console.log('🚀 系統初始化開始...');
             
-            try {
-                // 初始化 Supabase
-                if (window.supabase && SUPABASE_URL && SUPABASE_KEY) {
-                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                    console.log('Supabase 初始化成功');
-                    
+            // 初始化 Supabase
+            const supabaseInitialized = initializeSupabase();
+            
+            if (supabaseInitialized) {
+                try {
                     // 檢查用戶登入狀態
-                    const { data: { user }, error } = await supabaseClient.auth.getUser();
-                    if (!error && user) {
-                        currentUser = user;
-                        await checkAdminStatus();
+                    const { data, error } = await supabaseClient.auth.getSession();
+                    if (!error && data.session) {
+                        currentUser = data.session.user;
+                        checkAdminStatus();
+                        console.log('✅ 用戶已登入:', currentUser.email);
+                    }
+                } catch (error) {
+                    console.log('⚠️ 獲取用戶狀態失敗:', error);
+                }
+                
+                // 監聽認證狀態變化
+                supabaseClient.auth.onAuthStateChange(async (event, session) => {
+                    console.log('🔄 認證狀態變化:', event);
+                    currentUser = session?.user || null;
+                    
+                    if (currentUser) {
+                        checkAdminStatus();
+                    } else {
+                        isAdmin = false;
                     }
                     
-                    // 監聽認證狀態變化
-                    supabaseClient.auth.onAuthStateChange(async (event, session) => {
-                        console.log('認證狀態變化:', event);
-                        currentUser = session?.user || null;
-                        
-                        if (currentUser) {
-                            await checkAdminStatus();
-                        } else {
-                            isAdmin = false;
-                        }
-                        
-                        updateAuthButtons();
-                        loadListings();
-                    });
+                    updateAuthButtons();
+                    loadListings();
+                });
+            }
+            
+            updateAuthButtons();
+            await loadListings();
+            
+            // 設定事件監聽
+            const typeSelect = document.querySelector('select[name="type"]');
+            if (typeSelect) {
+                typeSelect.addEventListener('change', toggleAdLinkField);
+            }
+            
+            // 設定表單提交
+            const postForm = document.getElementById('postForm');
+            if (postForm) {
+                postForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
                     
-                } else {
-                    console.warn('Supabase 未正確載入，使用演示模式');
-                    systemMode = 'local';
-                }
-                
-                updateAuthButtons();
-                await loadListings();
-                
-                // 設定表單提交
-                const postForm = document.getElementById('postForm');
-                if (postForm) {
-                    postForm.addEventListener('submit', async function(e) {
-                        e.preventDefault();
-                        
-                        const formData = new FormData(this);
-                        const submitBtn = this.querySelector('.submit-btn');
-                        
-                        submitBtn.disabled = true;
-                        submitBtn.textContent = '提交中...';
-                        
-                        try {
-                            const listing = {
-                                id: Date.now().toString(),
-                                created_at: new Date().toISOString(),
-                                type: formData.get('type'),
-                                brand: formData.get('brand'),
-                                category: formData.get('category'),
-                                description: formData.get('description'),
-                                contact: formData.get('contact'),
-                                password_hash: await hashPassword(formData.get('password'))
-                            };
-                            
-                            // 在演示模式中直接添加到本地陣列
-                            allListings.unshift(listing);
-                            displayListings();
-                            
-                            showMessage('發布成功！（演示模式）');
-                            closeModal();
-                            
-                        } catch (error) {
-                            handleError(error, '發布需求');
-                        } finally {
-                            submitBtn.disabled = false;
-                            submitBtn.textContent = '發布需求';
+                    if (!supabaseClient) {
+                        showError('無法連接到資料庫');
+                        return;
+                    }
+                    
+                    const formData = new FormData(this);
+                    const submitBtn = this.querySelector('.submit-btn');
+                    const editId = this.dataset.editId;
+                    
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = '提交中...';
+                    
+                    const listing = {
+                        type: formData.get('type'),
+                        brand: formData.get('brand'),
+                        category: formData.get('category'),
+                        description: formData.get('description'),
+                        contact: formData.get('contact'),
+                        ad_link: formData.get('ad_link') || null
+                    };
+                    
+                    const password = formData.get('password');
+                    if (password || (editId && isAdmin)) {
+                        if (password) {
+                            listing.password_hash = await hashPassword(password);
                         }
-                    });
-                }
-                
-                // 點擊外部關閉 Modal
-                window.addEventListener('click', function(event) {
-                    if (event.target.classList.contains('modal')) {
-                        if (event.target.id === 'postModal') {
-                            closeModal();
-                        } else if (event.target.id === 'authModal') {
-                            closeAuthModal();
+                    }
+                    
+                    try {
+                        if (editId) {
+                            if (!password) {
+                                const oldListing = allListings.find(item => item.id === editId);
+                                if (oldListing && oldListing.password_hash) {
+                                    listing.password_hash = oldListing.password_hash;
+                                }
+                            }
+                            
+                            const { error } = await supabaseClient
+                                .from('listings')
+                                .update(listing)
+                                .eq('id', editId);
+                            
+                            if (error) throw error;
+                            showMessage('更新成功！');
+                        } else {
+                            const { error } = await supabaseClient
+                                .from('listings')
+                                .insert([listing]);
+                            
+                            if (error) throw error;
+                            showMessage('發布成功！');
                         }
+                        
+                        await loadListings();
+                        closeModal();
+                    } catch (error) {
+                        console.error('提交錯誤:', error);
+                        alert('操作失敗，請稍後再試');
+                    } finally {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = editId ? '更新需求' : '發布需求';
                     }
                 });
-                
-                console.log('系統初始化完成');
-                
-            } catch (error) {
-                handleError(error, '系統初始化');
-                updateSystemStatus('error', '系統初始化失敗，部分功能可能無法使用');
             }
+            
+            // 點擊外部關閉 Modal
+            window.onclick = function(event) {
+                if (event.target.className === 'modal') {
+                    if (event.target.id === 'postModal') {
+                        closeModal();
+                    } else if (event.target.id === 'authModal') {
+                        closeAuthModal();
+                    } else if (event.target.id === 'adminModal') {
+                        closeAdminPanel();
+                    }
+                }
+            };
+            
+            console.log('✅ 系統初始化完成');
         });
-        
-        // 全域錯誤處理
-        window.addEventListener('error', function(e) {
-            console.error('全域錯誤:', e.error);
-            updateSystemStatus('error', '發生未預期的錯誤');
-        });
-        
-        window.addEventListener('unhandledrejection', function(e) {
-            console.error('未處理的 Promise 拒絕:', e.reason);
-            updateSystemStatus('error', '發生網路或資料庫錯誤');
-            e.preventDefault();
-        });
-        
     </script>
 </body>
 </html>

@@ -913,6 +913,34 @@
                         <li>• users 表（用戶資料）</li>
                         <li>• admins 表（管理員）- 可選</li>
                     </ul>
+                    <p style="margin-top: 0.5rem;"><strong>留言功能說明：</strong></p>
+                    <ul style="list-style: none; padding-left: 1rem;">
+                        <li>• 編輯/刪除留言需要正確的 RLS 政策設定</li>
+                        <li>• 如果資料庫連接失敗，會自動使用本地模式</li>
+                        <li>• 本地模式的修改不會永久保存</li>
+                    </ul>
+                    <p style="margin-top: 0.5rem;"><strong>建議的 RLS 政策設定（Supabase SQL Editor）：</strong></p>
+                    <pre style="background: rgba(0,0,0,0.1); padding: 0.5rem; border-radius: 4px; font-size: 0.75rem; overflow-x: auto;">
+-- 允許用戶編輯自己的留言
+CREATE POLICY "Users can update own comments" 
+ON comments FOR UPDATE 
+USING (auth.uid() = user_id);
+
+-- 允許用戶刪除自己的留言
+CREATE POLICY "Users can delete own comments" 
+ON comments FOR DELETE 
+USING (auth.uid() = user_id);
+
+-- 允許所有人查看留言
+CREATE POLICY "Comments are viewable by everyone" 
+ON comments FOR SELECT 
+USING (true);
+
+-- 允許已登入用戶新增留言
+CREATE POLICY "Authenticated users can insert comments" 
+ON comments FOR INSERT 
+WITH CHECK (auth.uid() IS NOT NULL);
+                    </pre>
                     <p style="margin-top: 0.5rem;">建議在 Supabase SQL Editor 執行建表語句，並確認 RLS 政策正確設定。</p>
                 </div>
             </details>
@@ -1197,6 +1225,7 @@
                             <h3 style="color: #667eea; margin-bottom: 1rem;">管理員資訊</h3>
                             <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px;">
                                 <p><strong>管理員：</strong>${currentUser.email}</p>
+                                <p><strong>用戶 ID：</strong>${currentUser.id}</p>
                                 <p><strong>權限：</strong>完整管理權限</p>
                                 <p><strong>登入時間：</strong>${new Date().toLocaleString('zh-TW')}</p>
                                 <p><strong>系統模式：</strong>${supabaseClient ? '資料庫模式' : '本地模式'}</p>
@@ -1217,6 +1246,9 @@
                                 </button>
                                 <button class="btn btn-primary" onclick="viewAllPasswords()">
                                     🔑 查看所有密碼
+                                </button>
+                                <button class="btn btn-primary" onclick="testCommentSystem()">
+                                    🧪 測試留言系統
                                 </button>
                             </div>
                         </div>
@@ -1351,6 +1383,55 @@
             URL.revokeObjectURL(url);
             
             showMessage('密碼清單已下載');
+        }
+        
+        // 測試留言系統
+        function testCommentSystem() {
+            if (!isAdmin) {
+                alert('無權限執行此操作');
+                return;
+            }
+            
+            let testReport = '🧪 留言系統測試報告\n\n';
+            
+            // 檢查用戶資訊
+            testReport += '【用戶資訊】\n';
+            testReport += `當前用戶：${currentUser?.email || '未登入'}\n`;
+            testReport += `用戶 ID：${currentUser?.id || '無'}\n`;
+            testReport += `是否為管理員：${isAdmin ? '是' : '否'}\n\n`;
+            
+            // 檢查資料庫連接
+            testReport += '【系統狀態】\n';
+            testReport += `運行模式：${supabaseClient ? '資料庫模式' : '本地模式'}\n`;
+            testReport += `Supabase URL：${SUPABASE_URL}\n\n`;
+            
+            // 檢查留言權限
+            testReport += '【留言權限檢查】\n';
+            const firstComment = document.querySelector('.comment');
+            if (firstComment) {
+                const commentId = firstComment.dataset.commentId;
+                const hasEditBtn = firstComment.querySelector('.comment-action-btn[onclick*="editComment"]');
+                const hasDeleteBtn = firstComment.querySelector('.comment-action-btn[onclick*="deleteComment"]');
+                const hasAdminDeleteBtn = firstComment.querySelector('.comment-action-btn.admin-delete');
+                
+                testReport += `找到留言 ID：${commentId || '無'}\n`;
+                testReport += `編輯按鈕：${hasEditBtn ? '有' : '無'}\n`;
+                testReport += `刪除按鈕：${hasDeleteBtn ? '有' : '無'}\n`;
+                testReport += `管理員刪除按鈕：${hasAdminDeleteBtn ? '有' : '無'}\n\n`;
+            } else {
+                testReport += '沒有找到任何留言\n\n';
+            }
+            
+            // 建議
+            testReport += '【建議】\n';
+            if (!supabaseClient) {
+                testReport += '• 系統在本地模式運行，留言編輯/刪除只會暫時生效\n';
+            } else {
+                testReport += '• 如果無法編輯/刪除留言，請檢查 Supabase RLS 政策\n';
+                testReport += '• 確保 comments 表有正確的權限設定\n';
+            }
+            
+            alert(testReport);
         }
         
         // 硬編碼的管理員列表（請在這裡設定管理員 email）
@@ -1497,7 +1578,9 @@
                             showSampleComments(listingId);
                             return;
                         }
-                        throw error;
+                        // 如果沒有找到留言，顯示空留言列表
+                        displayComments([], listingId);
+                        return;
                     }
                     
                     displayComments(data || [], listingId);
@@ -1514,7 +1597,12 @@
                     }
                 } catch (error) {
                     console.error('載入留言錯誤:', error);
-                    commentsList.innerHTML = '<div style="text-align: center; color: #666;">載入留言失敗</div>';
+                    // 如果所有嘗試都失敗，顯示空留言或範例留言
+                    if (supabaseClient) {
+                        commentsList.innerHTML = '<div style="text-align: center; color: #666; padding: 1rem;">留言載入失敗，請檢查資料庫連接</div>';
+                    } else {
+                        showSampleComments(listingId);
+                    }
                 }
             } else {
                 // 本地模式 - 顯示範例留言
@@ -1575,114 +1663,136 @@
                         </div>
                     `;
                 }
+            } else if (commentForm && !commentForm.querySelector('.comment-form')) {
+                // 如果已登入但沒有留言表單，添加表單
+                commentForm.innerHTML = `
+                    <div class="comment-form" data-listing="${listingId}">
+                        <div class="comment-input-group">
+                            <textarea class="comment-input" placeholder="輸入您的留言或問題..."></textarea>
+                            <button class="comment-submit" onclick="submitComment('${listingId}')">發送</button>
+                        </div>
+                    </div>
+                `;
             }
             
             if (comments.length === 0) {
                 commentsList.innerHTML = '<div style="text-align: center; color: #666; padding: 1rem;">暫無留言，來留下第一則留言吧！</div>';
-                return;
-            }
-            
-            // 整理留言結構 - 分離主留言和回覆
-            const mainComments = comments.filter(c => !c.parent_comment_id);
-            const replyMap = {};
-            
-            comments.filter(c => c.parent_comment_id).forEach(reply => {
-                if (!replyMap[reply.parent_comment_id]) {
-                    replyMap[reply.parent_comment_id] = [];
-                }
-                replyMap[reply.parent_comment_id].push(reply);
-            });
-            
-            // 渲染留言
-            commentsList.innerHTML = mainComments.map(comment => {
-                const isMyComment = currentUser && comment.user_id === currentUser.id;
-                const replies = replyMap[comment.id] || [];
-                const authorName = comment.users?.name || comment.author_name || '匿名用戶';
+            } else {
+                // 整理留言結構 - 分離主留言和回覆
+                const mainComments = comments.filter(c => !c.parent_comment_id);
+                const replyMap = {};
                 
-                return `
-                    <div class="comment" data-comment-id="${comment.id}">
-                        <div class="comment-header">
-                            <span class="comment-author">
-                                ${authorName}
-                                ${isMyComment ? '<span class="comment-author-badge">我</span>' : ''}
-                            </span>
-                            <div class="comment-meta">
-                                <span class="comment-time">${formatDate(comment.created_at)}</span>
-                            </div>
-                        </div>
-                        <div class="comment-content">${comment.content}</div>
-                        <div class="comment-actions">
-                            ${currentUser ? `
-                                <button class="comment-action-btn" onclick="toggleReplyForm('${comment.id}')">
-                                    💬 回覆
-                                </button>
-                            ` : ''}
-                            ${isMyComment ? `
-                                <button class="comment-action-btn" onclick="editComment('${comment.id}')">
-                                    ✏️ 編輯
-                                </button>
-                                <button class="comment-action-btn" onclick="deleteComment('${comment.id}')">
-                                    🗑️ 刪除
-                                </button>
-                            ` : ''}
-                            ${isAdmin && !isMyComment ? `
-                                <button class="comment-action-btn admin-delete" onclick="deleteComment('${comment.id}', true)">
-                                    🛡️ 管理員刪除
-                                </button>
-                            ` : ''}
-                        </div>
-                        
-                        <!-- 回覆表單 -->
-                        ${currentUser ? `
-                            <div class="reply-form" id="reply-form-${comment.id}">
-                                <div class="reply-input-group">
-                                    <textarea class="reply-input" id="reply-content-${comment.id}" 
-                                              placeholder="輸入您的回覆..."></textarea>
-                                    <button class="reply-submit" onclick="submitReply('${comment.id}', '${listingId}')">
-                                        發送
-                                    </button>
+                comments.filter(c => c.parent_comment_id).forEach(reply => {
+                    if (!replyMap[reply.parent_comment_id]) {
+                        replyMap[reply.parent_comment_id] = [];
+                    }
+                    replyMap[reply.parent_comment_id].push(reply);
+                });
+                
+                // 渲染留言
+                commentsList.innerHTML = mainComments.map(comment => {
+                    const isMyComment = currentUser && comment.user_id && (comment.user_id === currentUser.id);
+                    const replies = replyMap[comment.id] || [];
+                    const authorName = comment.users?.name || comment.author_name || '匿名用戶';
+                    
+                    console.log('留言權限檢查:', {
+                        commentUserId: comment.user_id,
+                        currentUserId: currentUser?.id,
+                        isMyComment: isMyComment,
+                        isAdmin: isAdmin
+                    });
+                    
+                    return `
+                        <div class="comment" data-comment-id="${comment.id}">
+                            <div class="comment-header">
+                                <span class="comment-author">
+                                    ${authorName}
+                                    ${isMyComment ? '<span class="comment-author-badge">我</span>' : ''}
+                                </span>
+                                <div class="comment-meta">
+                                    <span class="comment-time">${formatDate(comment.created_at)}</span>
                                 </div>
                             </div>
-                        ` : ''}
-                        
-                        <!-- 顯示回覆 -->
-                        ${replies.map(reply => {
-                            const isMyReply = currentUser && reply.user_id === currentUser.id;
-                            const replyAuthorName = reply.users?.name || reply.author_name || '匿名用戶';
+                            <div class="comment-content">${comment.content}</div>
+                            <div class="comment-actions">
+                                ${currentUser && !isMyComment ? `
+                                    <button class="comment-action-btn" onclick="toggleReplyForm('${comment.id}')">
+                                        💬 回覆
+                                    </button>
+                                ` : ''}
+                                ${currentUser && isMyComment ? `
+                                    <button class="comment-action-btn" onclick="editComment('${comment.id}')">
+                                        ✏️ 編輯
+                                    </button>
+                                    <button class="comment-action-btn" onclick="deleteComment('${comment.id}')">
+                                        🗑️ 刪除
+                                    </button>
+                                ` : ''}
+                                ${currentUser && isAdmin && !isMyComment ? `
+                                    <button class="comment-action-btn admin-delete" onclick="deleteComment('${comment.id}', true)">
+                                        🛡️ 管理員刪除
+                                    </button>
+                                ` : ''}
+                            </div>
                             
-                            return `
-                                <div class="comment comment-reply" data-comment-id="${reply.id}">
-                                    <div class="comment-header">
-                                        <span class="comment-author">
-                                            ${replyAuthorName}
-                                            ${isMyReply ? '<span class="comment-author-badge">我</span>' : ''}
-                                        </span>
-                                        <div class="comment-meta">
-                                            <span class="comment-time">${formatDate(reply.created_at)}</span>
+                            <!-- 回覆表單 -->
+                            ${currentUser ? `
+                                <div class="reply-form" id="reply-form-${comment.id}">
+                                    <div class="reply-input-group">
+                                        <textarea class="reply-input" id="reply-content-${comment.id}" 
+                                                  placeholder="輸入您的回覆..."></textarea>
+                                        <button class="reply-submit" onclick="submitReply('${comment.id}', '${listingId}')">
+                                            發送
+                                        </button>
+                                    </div>
+                                </div>
+                            ` : ''}
+                            
+                            <!-- 顯示回覆 -->
+                            ${replies.map(reply => {
+                                const isMyReply = currentUser && reply.user_id && (reply.user_id === currentUser.id);
+                                const replyAuthorName = reply.users?.name || reply.author_name || '匿名用戶';
+                                
+                                console.log('回覆權限檢查:', {
+                                    replyUserId: reply.user_id,
+                                    currentUserId: currentUser?.id,
+                                    isMyReply: isMyReply
+                                });
+                                
+                                return `
+                                    <div class="comment comment-reply" data-comment-id="${reply.id}">
+                                        <div class="comment-header">
+                                            <span class="comment-author">
+                                                ${replyAuthorName}
+                                                ${isMyReply ? '<span class="comment-author-badge">我</span>' : ''}
+                                            </span>
+                                            <div class="comment-meta">
+                                                <span class="comment-time">${formatDate(reply.created_at)}</span>
+                                            </div>
+                                        </div>
+                                        <div class="comment-content">${reply.content}</div>
+                                        <div class="comment-actions">
+                                            ${currentUser && isMyReply ? `
+                                                <button class="comment-action-btn" onclick="editComment('${reply.id}')">
+                                                    ✏️ 編輯
+                                                </button>
+                                                <button class="comment-action-btn" onclick="deleteComment('${reply.id}')">
+                                                    🗑️ 刪除
+                                                </button>
+                                            ` : ''}
+                                            ${currentUser && isAdmin && !isMyReply ? `
+                                                <button class="comment-action-btn admin-delete" onclick="deleteComment('${reply.id}', true)">
+                                                    🛡️ 管理員刪除
+                                                </button>
+                                            ` : ''}
                                         </div>
                                     </div>
-                                    <div class="comment-content">${reply.content}</div>
-                                    <div class="comment-actions">
-                                        ${isMyReply ? `
-                                            <button class="comment-action-btn" onclick="editComment('${reply.id}')">
-                                                ✏️ 編輯
-                                            </button>
-                                            <button class="comment-action-btn" onclick="deleteComment('${reply.id}')">
-                                                🗑️ 刪除
-                                            </button>
-                                        ` : ''}
-                                        ${isAdmin && !isMyReply ? `
-                                            <button class="comment-action-btn admin-delete" onclick="deleteComment('${reply.id}', true)">
-                                                🛡️ 管理員刪除
-                                            </button>
-                                        ` : ''}
-                                    </div>
-                                </div>
-                            `;
-                        }).join('')}
-                    </div>
-                `;
-            }).join('');
+                                `;
+                            }).join('')}
+                        </div>
+                    `;
+                }).join('');
+            }
         }
         
         // 切換回覆表單
@@ -1719,6 +1829,12 @@
                 user_id: currentUser.id,
                 is_private: false
             };
+            
+            console.log('準備提交的回覆資料:', {
+                ...comment,
+                currentUser: currentUser?.email,
+                userId: currentUser?.id
+            });
             
             try {
                 if (supabaseClient) {
@@ -1803,7 +1919,11 @@
                 is_private: false
             };
             
-            console.log('準備提交的留言資料:', comment);
+            console.log('準備提交的留言資料:', {
+                ...comment,
+                currentUser: currentUser?.email,
+                userId: currentUser?.id
+            });
             
             try {
                 if (supabaseClient) {

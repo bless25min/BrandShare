@@ -507,7 +507,6 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            height: fit-content;
         }
 
         .comment-submit:hover {
@@ -640,6 +639,95 @@
             font-size: 0.7rem;
             font-weight: normal;
             margin-left: 0.5rem;
+        }
+
+        /* Ad Training Center Section - 新增的區塊 */
+        .ad-training-section {
+            background: linear-gradient(135deg, #1877f2 0%, #42b883 100%);
+            color: white;
+            padding: 4rem 0;
+            margin: 3rem 0;
+        }
+
+        .ad-training-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            text-align: center;
+        }
+
+        .ad-training-section h2 {
+            font-size: 2.2rem;
+            margin-bottom: 1rem;
+            font-weight: bold;
+        }
+
+        .ad-training-section .subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .training-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .training-feature {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .training-feature:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .training-feature .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .training-feature h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+        }
+
+        .training-feature p {
+            font-size: 1rem;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+
+        .training-cta {
+            margin-top: 3rem;
+        }
+
+        .training-btn {
+            background: white;
+            color: #1877f2;
+            padding: 1rem 2.5rem;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 30px;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .training-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+            color: #1877f2;
         }
 
         /* Modal */
@@ -825,6 +913,14 @@
                 flex-direction: column;
                 gap: 0.5rem;
             }
+
+            .ad-training-section h2 {
+                font-size: 1.8rem;
+            }
+
+            .training-features {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -870,6 +966,40 @@
             </div>
         </div>
     </div>
+
+    <!-- Ad Training Center Section - 新增的推廣區塊 -->
+    <section class="ad-training-section">
+        <div class="ad-training-container">
+            <h2>🎯 成為頂尖廣告投手</h2>
+            <p class="subtitle">掌握Meta廣告演算法，提升投放技能，打造高轉換廣告活動</p>
+            
+            <div class="training-features">
+                <div class="training-feature">
+                    <span class="icon">🧠</span>
+                    <h3>演算法破解術</h3>
+                    <p>深入理解Meta廣告演算法運作原理，掌握受眾品質控管、預算優化等88個實戰技巧</p>
+                </div>
+                
+                <div class="training-feature">
+                    <span class="icon">🎨</span>
+                    <h3>素材優化藝術</h3>
+                    <p>學習創造高互動廣告素材，運用A/B測試、UGC策略，大幅提升廣告轉換率</p>
+                </div>
+                
+                <div class="training-feature">
+                    <span class="icon">💰</span>
+                    <h3>預算擴量策略</h3>
+                    <p>從小額測試到大規模擴量，掌握CBO/ABO配置、出價模型，實現穩定可擴展的廣告成效</p>
+                </div>
+            </div>
+
+            <div class="training-cta">
+                <a href="https://bless25min.github.io/MetaAd/" target="_blank" class="training-btn">
+                    免費進入廣告投手養成中心 →
+                </a>
+            </div>
+        </div>
+    </section>
 
     <!-- Features Section -->
     <section class="features">

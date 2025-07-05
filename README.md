@@ -106,6 +106,6 @@ Supabase (Backend-as-a-Service)
 
 **[🏠 首頁](https://bless25min.github.io/BrandShare/)
 
-Made with Clude AI & ChatGPT
+Made with Claude AI & ChatGPT
 
 </div>

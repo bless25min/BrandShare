@@ -1,13 +1,66 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+
+  <!-- 主頁面 - AdSpace Connect 品牌廣告版位媒合平台 -->
   <url>
     <loc>https://bless25min.github.io/BrandShare/</loc>
-    <lastmod>2024-12-19</lastmod>
+    <lastmod>2025-07-07</lastmod>
+    <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
+
+  <!-- 功能頁面 - 依據平台功能設計 -->
   <url>
-    <loc>https://bless25min.github.io/MetaAd/</loc>
-    <lastmod>2024-12-19</lastmod>
-    <priority>1.0</priority>
+    <loc>https://bless25min.github.io/BrandShare/#offers</loc>
+    <lastmod>2025-07-07</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
   </url>
+
+  <url>
+    <loc>https://bless25min.github.io/BrandShare/#requests</loc>
+    <lastmod>2025-07-07</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- 產業分類頁面 -->
+  <url>
+    <loc>https://bless25min.github.io/BrandShare/#sports</loc>
+    <lastmod>2025-07-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://bless25min.github.io/BrandShare/#fashion</loc>
+    <lastmod>2025-07-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://bless25min.github.io/BrandShare/#food</loc>
+    <lastmod>2025-07-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://bless25min.github.io/BrandShare/#tech</loc>
+    <lastmod>2025-07-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://bless25min.github.io/BrandShare/#beauty</loc>
+    <lastmod>2025-07-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
 </urlset>
